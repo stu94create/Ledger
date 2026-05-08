@@ -10,6 +10,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="manifest" href="manifest.webmanifest" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Ledger" />
+<link rel="apple-touch-icon" href="icon.svg" />
+<link rel="icon" href="icon.svg" type="image/svg+xml" />
 <style>
 :root{--paper:#f5efe0;--paper-deep:#ebe3d0;--paper-soft:#faf6e9;--paper-edge:#d9cfb8;--rule:#b8a982;--rule-soft:#ddd2b3;--ink:#2a2520;--ink-muted:#6e6655;--green:#1a3528;--green-mid:#2e5942;--green-tint:#d6dfd0;--red:#8a3030;--gold:#a8843e;--white:#fffef7;--display:"EB Garamond",Garamond,serif;--body:"Lora",Georgia,serif;--mono:"IBM Plex Mono",Menlo,monospace;--shadow-1:0 1px 2px rgba(42,37,32,.08),0 4px 12px rgba(42,37,32,.05);--shadow-2:0 4px 10px rgba(42,37,32,.12),0 16px 32px rgba(42,37,32,.08);--r-sm:2px;--r-md:4px;--r-lg:6px}
 *,*::before,*::after{box-sizing:border-box}
@@ -158,11 +164,19 @@ main{padding:24px 20px 40px}
 <div id="toast-host" role="status" aria-live="polite" class="sr-only"></div>
 <script>
 const KEY="ledger.v1";
+const HKEY="ledger.v1.history";
+const BKEY="ledger.v1.lastBackup";
+const HMAX=20;
+let _persistGranted=false;
 const uid=(p="id")=>p+"-"+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
 const DEFAULTS=()=>({profiles:[{id:uid("pf"),label:"Default",name:"",address:"",email:"",phone:"",vatNumber:"",paymentDetails:"",invoicePrefix:"INV",nextSeq:1,isDefault:true}],lineItemTemplates:[],clients:[],invoices:[],settings:{defaultVatRate:23,defaultPaymentTermsDays:14,currency:"EUR",locale:"en-IE"}});
 let state=loadState(),view="dashboard",invoiceFilter="all",lastFocus=null;
 function loadState(){try{const raw=localStorage.getItem(KEY);if(!raw)return DEFAULTS();let p=JSON.parse(raw);const def=DEFAULTS();if(p.business&&!p.profiles){const b=p.business,seq=p.settings?.nextInvoiceSeq||1;p.profiles=[{id:uid("pf"),label:b.name||"Default",name:b.name||"",address:b.address||"",email:b.email||"",phone:b.phone||"",vatNumber:b.vatNumber||"",paymentDetails:b.paymentDetails||"",invoicePrefix:b.invoicePrefix||"INV",nextSeq:seq,isDefault:true}];delete p.business;if(p.settings)delete p.settings.nextInvoiceSeq;}p.profiles=p.profiles?.length?p.profiles:def.profiles;if(!p.profiles.some(x=>x.isDefault))p.profiles[0].isDefault=true;p.lineItemTemplates=p.lineItemTemplates||[];p.clients=p.clients||[];p.invoices=p.invoices||[];const dpid=p.profiles.find(x=>x.isDefault)?.id||p.profiles[0].id;for(const inv of p.invoices){if(!inv.profileId||!p.profiles.some(x=>x.id===inv.profileId))inv.profileId=dpid;}return{profiles:p.profiles,lineItemTemplates:p.lineItemTemplates,clients:p.clients,invoices:p.invoices,settings:{...def.settings,...(p.settings||{})}};}catch(e){console.warn(e);return DEFAULTS();}}
-function saveState(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){console.warn(e);toast("Couldn't save — storage may be full");}}
+function saveState(){try{pushHistory();localStorage.setItem(KEY,JSON.stringify(state));}catch(e){console.warn(e);toast("Couldn't save — storage may be full");}}
+function pushHistory(){try{const raw=localStorage.getItem(KEY);if(!raw)return;const h=JSON.parse(localStorage.getItem(HKEY)||"[]");if(h[0]&&h[0].snapshot===raw)return;h.unshift({at:new Date().toISOString(),snapshot:raw});while(h.length>HMAX)h.pop();localStorage.setItem(HKEY,JSON.stringify(h));}catch(e){console.warn(e);}}
+function loadHistory(){try{return JSON.parse(localStorage.getItem(HKEY)||"[]");}catch{return[];}}
+function daysSince(iso){if(!iso)return Infinity;const d=new Date(iso);return isNaN(d)?Infinity:(Date.now()-d.getTime())/86400000;}
+function fmtRelative(iso){if(!iso)return"never";const m=(Date.now()-new Date(iso).getTime())/60000;if(m<1)return"just now";if(m<60)return`${Math.round(m)} min ago`;if(m<1440)return`${Math.round(m/60)} h ago`;return`${Math.round(m/1440)} d ago`;}
 const findProfile=id=>state.profiles.find(p=>p.id===id)||getDefaultProfile();
 const getDefaultProfile=()=>state.profiles.find(p=>p.isDefault)||state.profiles[0];
 const setDefaultProfile=id=>state.profiles.forEach(p=>p.isDefault=p.id===id);
@@ -280,9 +294,16 @@ ${state.lineItemTemplates.length===0?`<div class="empty" style="padding:20px"><p
 <div class="btn-row"><button class="btn btn-primary" id="btn-save-defaults">Save defaults</button></div>
 <h3 style="margin-top:30px;margin-bottom:10px">Backup &amp; restore</h3>
 <p class="card-sub">Your data lives only on this device. Back up a JSON copy regularly.</p>
+<div class="stat" style="margin-bottom:10px">
+<div class="stat-label">Storage</div>
+<div class="stat-sub" style="margin-top:4px">${_persistGranted?"<strong style=\"color:var(--green)\">Persistent ✓</strong> — survives the iOS 7-day cleanup":"<strong style=\"color:var(--red)\">Best-effort</strong> — iOS may clear it after 7 days unused. Back up regularly."}</div>
+<div class="stat-sub" style="margin-top:6px">Last backup: <strong>${esc(fmtRelative(localStorage.getItem(BKEY)))}</strong>${daysSince(localStorage.getItem(BKEY))>14?` <span style="color:var(--red)">— overdue</span>`:""}</div>
+<div class="stat-sub" style="margin-top:4px">Local snapshots kept: <strong>${loadHistory().length}</strong> / ${HMAX}</div>
+</div>
 <div class="btn-row">
 <button class="btn btn-secondary" id="btn-backup">Download backup</button>
 <button class="btn btn-secondary" id="btn-restore">Restore from file</button>
+<button class="btn btn-secondary" id="btn-history">Restore an earlier snapshot</button>
 <input type="file" id="restore-file" accept="application/json,.json" hidden />
 </div>
 <h3 style="margin-top:30px;margin-bottom:10px">How to use Ledger</h3>
@@ -333,6 +354,7 @@ document.getElementById("btn-save-defaults").addEventListener("click",()=>{state
 document.getElementById("btn-backup").addEventListener("click",downloadBackup);
 document.getElementById("btn-restore").addEventListener("click",()=>document.getElementById("restore-file").click());
 document.getElementById("restore-file").addEventListener("change",handleRestore);
+document.getElementById("btn-history").addEventListener("click",openHistoryModal);
 document.getElementById("btn-wipe").addEventListener("click",()=>{if(!confirm("Erase all data? This cannot be undone."))return;if(!confirm("Really erase everything?"))return;state=DEFAULTS();saveState();toast("All data erased");setView("dashboard");});
 }
 
@@ -620,14 +642,46 @@ const url=URL.createObjectURL(blob);
 const a=document.createElement("a");a.href=url;a.download=`ledger-backup-${todayISO()}.json`;
 document.body.appendChild(a);a.click();document.body.removeChild(a);
 setTimeout(()=>URL.revokeObjectURL(url),1000);
+try{localStorage.setItem(BKEY,new Date().toISOString());}catch{}
 toast("Backup downloaded");
 }
 
 function handleRestore(e){
 const file=e.target.files[0];if(!file)return;
 const r=new FileReader();
-r.onload=()=>{try{const p=JSON.parse(r.result);const ok=(p.profiles&&Array.isArray(p.profiles))||(p.business&&Array.isArray(p.invoices));if(!ok)throw new Error("Not a valid Ledger backup");if(!confirm("Replace all current data with the backup?"))return;localStorage.setItem(KEY,JSON.stringify(p));state=loadState();toast("Restored from backup");setView("dashboard");}catch(err){console.error(err);toast("Couldn't read that file — "+err.message);}finally{e.target.value="";}};
+r.onload=()=>{try{const p=JSON.parse(r.result);const ok=(p.profiles&&Array.isArray(p.profiles))||(p.business&&Array.isArray(p.invoices));if(!ok)throw new Error("Not a valid Ledger backup");if(!confirm("Replace all current data with the backup? Your current data is auto-saved as a snapshot you can restore back to."))return;pushHistory();localStorage.setItem(KEY,JSON.stringify(p));state=loadState();toast("Restored from backup");setView("dashboard");}catch(err){console.error(err);toast("Couldn't read that file — "+err.message);}finally{e.target.value="";}};
 r.readAsText(file);
+}
+
+function openHistoryModal(){
+const h=loadHistory();
+if(!h.length){toast("No earlier snapshots yet — they appear after you save changes.");return;}
+const rows=h.map((entry,i)=>{
+let counts="—";try{const s=JSON.parse(entry.snapshot);counts=`${s.invoices?.length||0} inv · ${s.clients?.length||0} cli · ${s.profiles?.length||0} prof`;}catch{}
+const when=new Date(entry.at);
+return`<button class="card-button" data-snap-idx="${i}"><div class="card-row"><div><div class="card-title" style="font-size:1rem">${esc(when.toLocaleString(state.settings.locale||"en-IE"))}</div><div class="card-sub">${esc(counts)}</div></div><div style="text-align:right"><div class="card-sub" style="font-family:var(--mono);font-size:.78rem">${esc(fmtRelative(entry.at))}</div></div></div></button>`;
+}).join("");
+const body=`<p class="card-sub" style="margin-bottom:12px">Snapshots are taken automatically before each save. Tap one to roll back to it. The state you have now will itself become a snapshot, so you can flip back.</p><div class="stack">${rows}</div>`;
+const footer=`<button class="btn btn-secondary" data-close="1">Close</button>`;
+openModal({title:"Earlier snapshots",body,footer});
+document.querySelectorAll('#modal-host [data-snap-idx]').forEach(b=>b.addEventListener("click",()=>{
+const idx=Number(b.dataset.snapIdx),entry=h[idx];
+if(!confirm(`Roll back to the snapshot from ${new Date(entry.at).toLocaleString()}?`))return;
+try{pushHistory();localStorage.setItem(KEY,entry.snapshot);state=loadState();toast("Rolled back");closeModal();setView("dashboard");}catch(err){toast("Restore failed: "+err.message);}
+}));
+}
+
+async function ensurePersistentStorage(){
+if(!navigator.storage||!navigator.storage.persist)return;
+try{
+let granted=await navigator.storage.persisted();
+if(!granted)granted=await navigator.storage.persist();
+_persistGranted=!!granted;
+}catch(e){console.warn("persist() failed",e);}
+}
+function registerSW(){
+if(!("serviceWorker" in navigator))return;
+navigator.serviceWorker.register("./sw.js").catch(e=>console.warn("SW registration failed",e));
 }
 
 let toastTimer=null;
@@ -636,6 +690,8 @@ function toast(msg){const old=document.querySelector(".toast");if(old)old.remove
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setView(t.dataset.view)));
 render();
 if(state.profiles.every(p=>!p.name)&&state.invoices.length===0&&state.clients.length===0){setTimeout(()=>toast("Tip: open Settings to set up your first profile"),600);}
+window.addEventListener("load",registerSW);
+ensurePersistentStorage().then(()=>{if(view==="settings")renderSettings();});
 </script>
 
 </body>
