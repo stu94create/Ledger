@@ -184,14 +184,14 @@ function render({focusHeading=false}={}){document.querySelectorAll(".tab").forEa
 function setView(v){view=v;render({focusHeading:true});}
 
 function renderDashboard(){
-const invs=state.invoices.map(i=>({…i,_eff:effectiveStatus(i)}));
-const outstanding=invs.filter(i=>i._eff===“sent”||i._eff===“overdue”).reduce((s,i)=>s+invoiceTotals(i).total,0);
-const overdue=invs.filter(i=>i._eff===“overdue”).length;
+const invs=state.invoices.map(i=>({...i,_eff:effectiveStatus(i)}));
+const outstanding=invs.filter(i=>i._eff==="sent"||i._eff==="overdue").reduce((s,i)=>s+invoiceTotals(i).total,0);
+const overdue=invs.filter(i=>i._eff==="overdue").length;
 const now=new Date(),ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-const ptm=invs.filter(i=>i.status===“paid”&&(i.paidDate||””).startsWith(ym)).reduce((s,i)=>s+invoiceTotals(i).total,0);
-const pty=invs.filter(i=>i.status===“paid”&&(i.paidDate||””).startsWith(String(now.getFullYear()))).reduce((s,i)=>s+invoiceTotals(i).total,0);
-const recent=[…invs].sort((a,b)=>(b.issueDate||””).localeCompare(a.issueDate||””)).slice(0,5);
-main.innerHTML=`<div class="view-heading"><h2>Dashboard</h2><span class="view-meta">${invs.length} invoice${invs.length===1?””:“s”}</span></div>
+const ptm=invs.filter(i=>i.status==="paid"&&(i.paidDate||i.issueDate||"").startsWith(ym)).reduce((s,i)=>s+invoiceTotals(i).total,0);
+const pty=invs.filter(i=>i.status==="paid"&&(i.paidDate||i.issueDate||"").startsWith(String(now.getFullYear()))).reduce((s,i)=>s+invoiceTotals(i).total,0);
+const recent=[...invs].sort((a,b)=>(b.issueDate||"").localeCompare(a.issueDate||"")).slice(0,5);
+main.innerHTML=`<div class="view-heading"><h2>Dashboard</h2><span class="view-meta">${invs.length} invoice${invs.length===1?"":"s"}</span></div>
 
 <div class="stats-grid" role="list" aria-label="Summary statistics">
 <div class="stat" role="listitem"><div class="stat-label">Outstanding</div><div class="stat-value">${esc(fmtMoney(outstanding))}</div><div class="stat-sub">${invs.filter(i=>i._eff==="sent"||i._eff==="overdue").length} unpaid</div></div>
@@ -207,9 +207,9 @@ bindInvoiceCards();
 }
 
 function renderInvoices(){
-const all=state.invoices.map(i=>({…i,_eff:effectiveStatus(i)}));
-const filters=[{id:“all”,label:“All”},{id:“draft”,label:“Draft”},{id:“sent”,label:“Sent”},{id:“overdue”,label:“Overdue”},{id:“paid”,label:“Paid”}];
-const filtered=all.filter(i=>invoiceFilter===“all”||i._eff===invoiceFilter).sort((a,b)=>(b.issueDate||””).localeCompare(a.issueDate||””));
+const all=state.invoices.map(i=>({...i,_eff:effectiveStatus(i)}));
+const filters=[{id:"all",label:"All"},{id:"draft",label:"Draft"},{id:"sent",label:"Sent"},{id:"overdue",label:"Overdue"},{id:"paid",label:"Paid"}];
+const filtered=all.filter(i=>invoiceFilter==="all"||i._eff===invoiceFilter).sort((a,b)=>(b.issueDate||"").localeCompare(a.issueDate||""));
 main.innerHTML=`<div class="view-heading"><h2>Invoices</h2><span class="view-meta">${filtered.length} of ${all.length}</span></div>
 
 <div class="filter-row" role="group" aria-label="Filter by status">${filters.map(f=>`<button class="filter-btn" data-filter="${f.id}" aria-pressed="${invoiceFilter===f.id}">${f.label}</button>`).join("")}</div>
@@ -222,7 +222,7 @@ bindInvoiceCards();
 
 function invoiceCard(inv){
 const c=findClient(inv.clientId),p=findProfile(inv.profileId),t=invoiceTotals(inv),eff=effectiveStatus(inv);
-const txt=eff===“draft”?“Draft”:eff===“sent”?“Sent”:eff===“paid”?“Paid”:“Overdue”;
+const txt=eff==="draft"?"Draft":eff==="sent"?"Sent":eff==="paid"?"Paid":"Overdue";
 const aria=`Invoice ${inv.number}, from ${p.label}, ${c?c.name:"no client"}, ${txt}, total ${fmtMoney(t.total)}, issued ${fmtDate(inv.issueDate)}${inv.dueDate?", due "+fmtDate(inv.dueDate):""}`;
 return`<button class="card-button" data-invoice-id="${inv.id}" aria-label="${esc(aria)}">
 
@@ -236,8 +236,8 @@ return`<button class="card-button" data-invoice-id="${inv.id}" aria-label="${esc
 function bindInvoiceCards(){document.querySelectorAll("[data-invoice-id]").forEach(b=>b.addEventListener("click",()=>openInvoiceDetail(b.dataset.invoiceId)));}
 
 function renderClients(){
-const list=[…state.clients].sort((a,b)=>(a.name||””).localeCompare(b.name||””));
-main.innerHTML=`<div class="view-heading"><h2>Clients</h2><span class="view-meta">${list.length} client${list.length===1?””:“s”}</span></div>
+const list=[...state.clients].sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+main.innerHTML=`<div class="view-heading"><h2>Clients</h2><span class="view-meta">${list.length} client${list.length===1?"":"s"}</span></div>
 
 <div class="btn-row"><button class="btn btn-primary btn-block" id="btn-new-client">New client</button></div>
 ${list.length===0?`<div class="empty"><div class="empty-mark" aria-hidden="true">¶</div><p>No clients yet.</p></div>`:`<div class="stack" style="margin-top:14px">${list.map(clientCard).join("")}</div>`}`;
@@ -342,7 +342,7 @@ return`<button class="card-button" data-profile-id="${p.id}" aria-label="${esc(a
 
 <div class="card-row">
 <div><div class="card-title">${esc(p.label)}</div><div class="card-sub">${esc(p.name||"(no name set)")}</div></div>
-<div style="text-align:right">${p.isDefault?`<span class="pill pill-default" aria-hidden="true">Default</span>`:""}<div class="card-sub" style="font-family:var(--mono);font-size:.78rem;margin-top:4px">${esc(p.invoicePrefix)}-…-${String(p.nextSeq).padStart(3,"0")}</div></div>
+<div style="text-align:right">${p.isDefault?`<span class="pill pill-default" aria-hidden="true">Default</span>`:""}<div class="card-sub" style="font-family:var(--mono);font-size:.78rem;margin-top:4px">${esc(p.invoicePrefix)}-...-${String(p.nextSeq).padStart(3,"0")}</div></div>
 </div></button>`;
 }
 function templateCard(t){
@@ -358,24 +358,24 @@ return`<button class="card-button" data-template-id="${t.id}" aria-label="${esc(
 function openModal({title,body,footer}){
 closeModal({silent:true});
 lastFocus=document.activeElement;
-const host=document.getElementById(“modal-host”);
-host.setAttribute(“aria-hidden”,“false”);
+const host=document.getElementById("modal-host");
+host.setAttribute("aria-hidden","false");
 host.innerHTML=`<div class="modal-backdrop" data-backdrop="1"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><header class="modal-head"><h2 id="modal-title">${esc(title)}</h2><button class="modal-close" aria-label="Close" data-close="1">×</button></header><div class="modal-body" id="modal-body">${body}</div>${footer?`<footer class="modal-foot">${footer}</footer>`:""}</section></div>`;
-document.getElementById(“app”).inert=true;
-const bd=host.querySelector(”.modal-backdrop”),md=host.querySelector(”.modal”);
-bd.addEventListener(“click”,e=>{if(e.target.dataset.backdrop)closeModal();});
-host.querySelectorAll(”[data-close]”).forEach(el=>el.addEventListener(“click”,()=>closeModal()));
-host._esc=e=>{if(e.key===“Escape”)closeModal();};
-document.addEventListener(“keydown”,host._esc);
-host._trap=e=>{if(e.key!==“Tab”)return;const f=md.querySelectorAll(‘a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex=”-1”])’);if(!f.length)return;const first=f[0],last=f[f.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}};
-md.addEventListener(“keydown”,host._trap);
-setTimeout(()=>{const t=host.querySelector(”#modal-title”);if(t){t.setAttribute(“tabindex”,”-1”);t.focus();}},30);
+document.getElementById("app").inert=true;
+const bd=host.querySelector(".modal-backdrop"),md=host.querySelector(".modal");
+bd.addEventListener("click",e=>{if(e.target.dataset.backdrop)closeModal();});
+host.querySelectorAll("[data-close]").forEach(el=>el.addEventListener("click",()=>closeModal()));
+host._esc=e=>{if(e.key==="Escape")closeModal();};
+document.addEventListener("keydown",host._esc);
+host._trap=e=>{if(e.key!=="Tab")return;const f=md.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])');if(!f.length)return;const first=f[0],last=f[f.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}};
+md.addEventListener("keydown",host._trap);
+setTimeout(()=>{const t=host.querySelector("#modal-title");if(t){t.setAttribute("tabindex","-1");t.focus();}},30);
 }
-function closeModal({silent}={}){const host=document.getElementById(“modal-host”);if(!host.firstChild)return;if(host._esc)document.removeEventListener(“keydown”,host._esc);host.innerHTML=””;host.setAttribute(“aria-hidden”,“true”);host._esc=null;document.getElementById(“app”).inert=false;if(!silent&&lastFocus?.focus)try{lastFocus.focus();}catch{}}
+function closeModal({silent}={}){const host=document.getElementById("modal-host");if(!host.firstChild)return;if(host._esc)document.removeEventListener("keydown",host._esc);host.innerHTML="";host.setAttribute("aria-hidden","true");host._esc=null;document.getElementById("app").inert=false;if(!silent&&lastFocus?.focus)try{lastFocus.focus();}catch{}}
 
 function openProfileModal(pid){
 const isNew=!pid;
-const p=isNew?{id:uid(“pf”),label:””,name:””,address:””,email:””,phone:””,vatNumber:””,paymentDetails:””,invoicePrefix:“INV”,nextSeq:1,isDefault:state.profiles.length===0}:{…findProfile(pid)};
+const p=isNew?{id:uid("pf"),label:"",name:"",address:"",email:"",phone:"",vatNumber:"",paymentDetails:"",invoicePrefix:"INV",nextSeq:1,isDefault:state.profiles.length===0}:{...findProfile(pid)};
 const body=`<form class="form" autocomplete="off">
 
 <div class="field"><label for="p-label">Profile label</label><input type="text" id="p-label" value="${esc(p.label)}" placeholder="e.g. Personal, Business" required /><div class="field-help">Just for picking — not shown on the invoice.</div></div>
@@ -409,7 +409,7 @@ if(del)del.addEventListener("click",()=>{if(!confirm(`Delete the "${p.label}" pr
 
 function openTemplateModal(tid){
 const isNew=!tid;
-const t=isNew?{id:uid(“tpl”),description:””,quantity:1,unitPrice:””,vatRate:state.settings.defaultVatRate}:{…findTemplate(tid)};
+const t=isNew?{id:uid("tpl"),description:"",quantity:1,unitPrice:"",vatRate:state.settings.defaultVatRate}:{...findTemplate(tid)};
 const body=`<form class="form" autocomplete="off">
 
 <div class="field"><label for="t-desc">Description</label><input type="text" id="t-desc" value="${esc(t.description)}" placeholder="e.g. Coaching session, 1 hour" required /></div>
@@ -434,7 +434,7 @@ if(del)del.addEventListener("click",()=>{if(!confirm("Delete this saved line?"))
 
 function openClientModal(cid){
 const isNew=!cid;
-const c=isNew?{id:uid(“cl”),name:””,address:””,email:””,defaultRate:””,notes:””}:{…findClient(cid)};
+const c=isNew?{id:uid("cl"),name:"",address:"",email:"",defaultRate:"",notes:""}:{...findClient(cid)};
 const body=`<form class="form" autocomplete="off">
 
 <div class="field"><label for="c-name">Name</label><input type="text" id="c-name" value="${esc(c.name)}" required /></div>
@@ -458,10 +458,10 @@ if(del)del.addEventListener("click",()=>{if(state.invoices.some(i=>i.clientId===
 
 function openInvoiceModal(invoiceId){
 const isNew=!invoiceId,def=state.settings,dp=getDefaultProfile();
-const inv=isNew?{id:uid(“inv”),profileId:dp.id,number:nextInvoiceNumber(dp.id),clientId:state.clients[0]?.id||””,issueDate:todayISO(),dueDate:addDaysISO(todayISO(),def.defaultPaymentTermsDays||14),lineItems:[{id:uid(“li”),description:””,quantity:1,unitPrice:””,vatRate:def.defaultVatRate}],vatEnabled:false,defaultVatRate:def.defaultVatRate,status:“draft”,sentDate:null,paidDate:null,notes:””}:JSON.parse(JSON.stringify(findInvoice(invoiceId)));
-const profileOpts=()=>state.profiles.map(p=>`<option value="${p.id}" ${inv.profileId===p.id?"selected":""}>${esc(p.label)}${p.isDefault?" (default)":""}</option>`).join(””);
-const clientOpts=()=>`<option value="">— select client —</option>`+state.clients.map(c=>`<option value="${c.id}" ${inv.clientId===c.id?"selected":""}>${esc(c.name)}</option>`).join(””);
-const tplOpts=()=>state.lineItemTemplates.length?`<option value="">+ Add from saved…</option>`+state.lineItemTemplates.map(t=>`<option value="${t.id}">${esc(t.description)} — ${esc(fmtMoney(t.unitPrice))}</option>`).join(””):””;
+const inv=isNew?{id:uid("inv"),profileId:dp.id,number:nextInvoiceNumber(dp.id),clientId:state.clients[0]?.id||"",issueDate:todayISO(),dueDate:addDaysISO(todayISO(),def.defaultPaymentTermsDays||14),lineItems:[{id:uid("li"),description:"",quantity:1,unitPrice:"",vatRate:def.defaultVatRate}],vatEnabled:false,defaultVatRate:def.defaultVatRate,status:"draft",sentDate:null,paidDate:null,notes:""}:JSON.parse(JSON.stringify(findInvoice(invoiceId)));
+const profileOpts=()=>state.profiles.map(p=>`<option value="${p.id}" ${inv.profileId===p.id?"selected":""}>${esc(p.label)}${p.isDefault?" (default)":""}</option>`).join("");
+const clientOpts=()=>`<option value="">— select client —</option>`+state.clients.map(c=>`<option value="${c.id}" ${inv.clientId===c.id?"selected":""}>${esc(c.name)}</option>`).join("");
+const tplOpts=()=>state.lineItemTemplates.length?`<option value="">+ Add from saved...</option>`+state.lineItemTemplates.map(t=>`<option value="${t.id}">${esc(t.description)} — ${esc(fmtMoney(t.unitPrice))}</option>`).join(""):"";
 const body=`<form class="form" autocomplete="off">
 
 <div class="field"><label for="i-profile">From (profile)</label><select id="i-profile">${profileOpts()}</select></div>
@@ -488,7 +488,7 @@ const footer=`${isNew?"":`<button class="btn btn-danger" data-action="delete">De
 openModal({title:isNew?"New invoice":"Edit invoice",body,footer});
 
 function renderLines(){
-const wrap=document.getElementById(“line-items”);
+const wrap=document.getElementById("line-items");
 wrap.innerHTML=inv.lineItems.map((li,idx)=>{
 const sub=(Number(li.quantity)||0)*(Number(li.unitPrice)||0);
 return`<div class="line-item" data-line-idx="${idx}">
@@ -519,30 +519,30 @@ ${inv.vatEnabled?`<div style="display:flex;justify-content:space-between"><span>
 }
 renderLines();renderTotals();
 
-document.getElementById(“i-add-line”).addEventListener(“click”,()=>{inv.lineItems.push({id:uid(“li”),description:””,quantity:1,unitPrice:””,vatRate:inv.defaultVatRate});renderLines();renderTotals();toast(“Line added”);});
-const sv=document.getElementById(“i-add-saved”);
-if(sv)sv.addEventListener(“change”,e=>{const tpl=findTemplate(e.target.value);if(!tpl)return;inv.lineItems.push({id:uid(“li”),description:tpl.description,quantity:tpl.quantity,unitPrice:tpl.unitPrice,vatRate:tpl.vatRate});renderLines();renderTotals();toast(`Added: ${tpl.description}`);e.target.value=””;});
-document.getElementById(“i-add-client”).addEventListener(“click”,()=>{const name=prompt(“New client name:”);if(!name)return;const c={id:uid(“cl”),name:name.trim(),email:””,address:””,defaultRate:””,notes:””};state.clients.push(c);saveState();inv.clientId=c.id;document.getElementById(“i-client”).innerHTML=clientOpts();toast(“Client added — open Clients to add full details”);});
-document.getElementById(“i-profile”).addEventListener(“change”,e=>{inv.profileId=e.target.value;if(isNew){inv.number=nextInvoiceNumber(inv.profileId);document.getElementById(“i-number”).value=inv.number;}});
-document.getElementById(“i-vat”).addEventListener(“change”,e=>{inv.vatEnabled=e.target.checked;document.getElementById(“i-vat-rate-field”).hidden=!inv.vatEnabled;renderLines();renderTotals();});
-document.getElementById(“i-vat-rate”).addEventListener(“input”,e=>{inv.defaultVatRate=Number(e.target.value)||0;inv.lineItems.forEach(li=>li.vatRate=inv.defaultVatRate);renderLines();renderTotals();});
-document.getElementById(“i-issue”).addEventListener(“change”,e=>{inv.issueDate=e.target.value;});
-document.getElementById(“i-due”).addEventListener(“change”,e=>{inv.dueDate=e.target.value;});
-document.getElementById(“i-number”).addEventListener(“input”,e=>{inv.number=e.target.value;});
-document.getElementById(“i-client”).addEventListener(“change”,e=>{inv.clientId=e.target.value;});
-document.getElementById(“i-notes”).addEventListener(“input”,e=>{inv.notes=e.target.value;});
+document.getElementById("i-add-line").addEventListener("click",()=>{inv.lineItems.push({id:uid("li"),description:"",quantity:1,unitPrice:"",vatRate:inv.defaultVatRate});renderLines();renderTotals();toast("Line added");});
+const sv=document.getElementById("i-add-saved");
+if(sv)sv.addEventListener("change",e=>{const tpl=findTemplate(e.target.value);if(!tpl)return;inv.lineItems.push({id:uid("li"),description:tpl.description,quantity:tpl.quantity,unitPrice:tpl.unitPrice,vatRate:tpl.vatRate});renderLines();renderTotals();toast(`Added: ${tpl.description}`);e.target.value="";});
+document.getElementById("i-add-client").addEventListener("click",()=>{const name=prompt("New client name:");if(!name)return;const c={id:uid("cl"),name:name.trim(),email:"",address:"",defaultRate:"",notes:""};state.clients.push(c);saveState();inv.clientId=c.id;document.getElementById("i-client").innerHTML=clientOpts();toast("Client added — open Clients to add full details");});
+document.getElementById("i-profile").addEventListener("change",e=>{inv.profileId=e.target.value;if(isNew){inv.number=nextInvoiceNumber(inv.profileId);document.getElementById("i-number").value=inv.number;}});
+document.getElementById("i-vat").addEventListener("change",e=>{inv.vatEnabled=e.target.checked;document.getElementById("i-vat-rate-field").hidden=!inv.vatEnabled;renderLines();renderTotals();});
+document.getElementById("i-vat-rate").addEventListener("input",e=>{const old=Number(inv.defaultVatRate)||0;inv.defaultVatRate=Number(e.target.value)||0;inv.lineItems.forEach(li=>{if(li.vatRate==null||Number(li.vatRate)===old)li.vatRate=inv.defaultVatRate;});renderLines();renderTotals();});
+document.getElementById("i-issue").addEventListener("change",e=>{inv.issueDate=e.target.value;});
+document.getElementById("i-due").addEventListener("change",e=>{inv.dueDate=e.target.value;});
+document.getElementById("i-number").addEventListener("input",e=>{inv.number=e.target.value;});
+document.getElementById("i-client").addEventListener("change",e=>{inv.clientId=e.target.value;});
+document.getElementById("i-notes").addEventListener("input",e=>{inv.notes=e.target.value;});
 
-document.querySelector(’#modal-host [data-action=“save”]’).addEventListener(“click”,()=>{
-if(!inv.number.trim()){toast(“Invoice number required”);return;}
-if(!inv.profileId){toast(“Pick a profile”);return;}
-if(!inv.clientId){toast(“Pick a client”);return;}
-inv.lineItems=inv.lineItems.map(li=>({…li,quantity:Number(li.quantity)||0,unitPrice:Number(li.unitPrice)||0,vatRate:Number(li.vatRate??inv.defaultVatRate)||0}));
-if(isNew){state.invoices.push(inv);if(inv.number===nextInvoiceNumber(inv.profileId))bumpInvoiceSeq(inv.profileId);}else{const i=state.invoices.findIndex(x=>x.id===inv.id);state.invoices[i]=inv;}
-saveState();toast(isNew?“Invoice saved”:“Saved”);closeModal();
+document.querySelector('#modal-host [data-action="save"]').addEventListener("click",()=>{
+if(!inv.number.trim()){toast("Invoice number required");return;}
+if(!inv.profileId){toast("Pick a profile");return;}
+if(!inv.clientId){toast("Pick a client");return;}
+inv.lineItems=inv.lineItems.map(li=>({...li,quantity:Number(li.quantity)||0,unitPrice:Number(li.unitPrice)||0,vatRate:Number(li.vatRate??inv.defaultVatRate)||0}));
+if(isNew){state.invoices.push(inv);bumpInvoiceSeq(inv.profileId);}else{const i=state.invoices.findIndex(x=>x.id===inv.id);state.invoices[i]=inv;}
+saveState();toast(isNew?"Invoice saved":"Saved");closeModal();
 if(isNew)openInvoiceDetail(inv.id);else render();
 });
-const del=document.querySelector(’#modal-host [data-action=“delete”]’);
-if(del)del.addEventListener(“click”,()=>{if(!confirm(`Delete invoice ${inv.number}?`))return;state.invoices=state.invoices.filter(x=>x.id!==inv.id);saveState();toast(“Invoice deleted”);closeModal();render();});
+const del=document.querySelector('#modal-host [data-action="delete"]');
+if(del)del.addEventListener("click",()=>{if(!confirm(`Delete invoice ${inv.number}?`))return;state.invoices=state.invoices.filter(x=>x.id!==inv.id);saveState();toast("Invoice deleted");closeModal();render();});
 }
 
 function openInvoiceDetail(id){
@@ -577,7 +577,7 @@ if(up)up.addEventListener("click",()=>{inv.status="sent";inv.paidDate=null;saveS
 }
 
 function renderInvoiceDoc(inv){
-const p=findProfile(inv.profileId),c=findClient(inv.clientId)||{name:”—”,address:””,email:””},t=invoiceTotals(inv);
+const p=findProfile(inv.profileId),c=findClient(inv.clientId)||{name:"—",address:"",email:""},t=invoiceTotals(inv);
 return`<div class="invoice-doc-head">
 
 <div><h1>Invoice</h1><div class="card-sub" style="margin-top:4px">${esc(p.name||p.label||"Your business")}</div></div>
@@ -603,39 +603,39 @@ ${p.paymentDetails?`<div class="doc-foot"><strong>Payment details</strong><div c
 function sendByEmail(inv){
 const c=findClient(inv.clientId),p=findProfile(inv.profileId),t=invoiceTotals(inv);
 const subject=`Invoice ${inv.number}${p.name?" from "+p.name:""}`;
-const greet=c?.name?`Hi ${c.name.split(" ")[0]},`:“Hello,”;
-const lines=[greet,””,`Please find attached invoice ${inv.number} for ${fmtMoney(t.total)}, due ${fmtDate(inv.dueDate)}.`,””,p.paymentDetails?`Payment details:\n${p.paymentDetails}`:””,””,“Many thanks,”,p.name||””].filter(x=>x!==undefined).join(”\n”);
-const to=c?.email?encodeURIComponent(c.email):””;
+const greet=c?.name?`Hi ${c.name.split(" ")[0]},`:"Hello,";
+const lines=[greet,"",`Please find attached invoice ${inv.number} for ${fmtMoney(t.total)}, due ${fmtDate(inv.dueDate)}.`,"",p.paymentDetails?`Payment details:\n${p.paymentDetails}`:"","","Many thanks,",p.name||""].filter(x=>x!==undefined).join("\n");
+const to=c?.email?encodeURIComponent(c.email):"";
 const subj=encodeURIComponent(subject),body=encodeURIComponent(lines);
-const useOutlook=confirm(“Open in Outlook? Tap Cancel to use the default Mail app instead.”);
+const useOutlook=confirm("Open in Outlook? Tap Cancel to use the default Mail app instead.");
 const url=useOutlook?`ms-outlook://compose?to=${to}&subject=${subj}&body=${body}`:`mailto:${to}?subject=${subj}&body=${body}`;
-if(inv.status===“draft”&&confirm(“Mark this invoice as sent?”)){inv.status=“sent”;inv.sentDate=todayISO();saveState();}
-window.location.href=url;toast(“Opening email…”);
+if(inv.status==="draft"&&confirm("Mark this invoice as sent?")){inv.status="sent";inv.sentDate=todayISO();saveState();}
+window.location.href=url;toast("Opening email...");
 }
 
 function downloadBackup(){
 const data=JSON.stringify(state,null,2);
-const blob=new Blob([data],{type:“application/json”});
+const blob=new Blob([data],{type:"application/json"});
 const url=URL.createObjectURL(blob);
-const a=document.createElement(“a”);a.href=url;a.download=`ledger-backup-${todayISO()}.json`;
+const a=document.createElement("a");a.href=url;a.download=`ledger-backup-${todayISO()}.json`;
 document.body.appendChild(a);a.click();document.body.removeChild(a);
 setTimeout(()=>URL.revokeObjectURL(url),1000);
-toast(“Backup downloaded”);
+toast("Backup downloaded");
 }
 
 function handleRestore(e){
 const file=e.target.files[0];if(!file)return;
 const r=new FileReader();
-r.onload=()=>{try{const p=JSON.parse(r.result);const ok=(p.profiles&&Array.isArray(p.profiles))||(p.business&&Array.isArray(p.invoices));if(!ok)throw new Error(“Not a valid Ledger backup”);if(!confirm(“Replace all current data with the backup?”))return;localStorage.setItem(KEY,JSON.stringify(p));state=loadState();toast(“Restored from backup”);setView(“dashboard”);}catch(err){console.error(err);toast(“Couldn’t read that file — “+err.message);}finally{e.target.value=””;}};
+r.onload=()=>{try{const p=JSON.parse(r.result);const ok=(p.profiles&&Array.isArray(p.profiles))||(p.business&&Array.isArray(p.invoices));if(!ok)throw new Error("Not a valid Ledger backup");if(!confirm("Replace all current data with the backup?"))return;localStorage.setItem(KEY,JSON.stringify(p));state=loadState();toast("Restored from backup");setView("dashboard");}catch(err){console.error(err);toast("Couldn't read that file — "+err.message);}finally{e.target.value="";}};
 r.readAsText(file);
 }
 
 let toastTimer=null;
-function toast(msg){const old=document.querySelector(”.toast”);if(old)old.remove();const t=document.createElement(“div”);t.className=“toast”;t.textContent=msg;document.body.appendChild(t);if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.remove(),2400);const sr=document.getElementById(“toast-host”);sr.textContent=””;setTimeout(()=>sr.textContent=msg,30);}
+function toast(msg){const old=document.querySelector(".toast");if(old)old.remove();const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.remove(),2400);const sr=document.getElementById("toast-host");sr.textContent="";setTimeout(()=>sr.textContent=msg,30);}
 
-document.querySelectorAll(”.tab”).forEach(t=>t.addEventListener(“click”,()=>setView(t.dataset.view)));
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setView(t.dataset.view)));
 render();
-if(state.profiles.every(p=>!p.name)&&state.invoices.length===0&&state.clients.length===0){setTimeout(()=>toast(“Tip: open Settings to set up your first profile”),600);}
+if(state.profiles.every(p=>!p.name)&&state.invoices.length===0&&state.clients.length===0){setTimeout(()=>toast("Tip: open Settings to set up your first profile"),600);}
 </script>
 
 </body>
