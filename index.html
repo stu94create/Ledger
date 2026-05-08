@@ -188,8 +188,8 @@ const invs=state.invoices.map(i=>({...i,_eff:effectiveStatus(i)}));
 const outstanding=invs.filter(i=>i._eff==="sent"||i._eff==="overdue").reduce((s,i)=>s+invoiceTotals(i).total,0);
 const overdue=invs.filter(i=>i._eff==="overdue").length;
 const now=new Date(),ym=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-const ptm=invs.filter(i=>i.status==="paid"&&(i.paidDate||"").startsWith(ym)).reduce((s,i)=>s+invoiceTotals(i).total,0);
-const pty=invs.filter(i=>i.status==="paid"&&(i.paidDate||"").startsWith(String(now.getFullYear()))).reduce((s,i)=>s+invoiceTotals(i).total,0);
+const ptm=invs.filter(i=>i.status==="paid"&&(i.paidDate||i.issueDate||"").startsWith(ym)).reduce((s,i)=>s+invoiceTotals(i).total,0);
+const pty=invs.filter(i=>i.status==="paid"&&(i.paidDate||i.issueDate||"").startsWith(String(now.getFullYear()))).reduce((s,i)=>s+invoiceTotals(i).total,0);
 const recent=[...invs].sort((a,b)=>(b.issueDate||"").localeCompare(a.issueDate||"")).slice(0,5);
 main.innerHTML=`<div class="view-heading"><h2>Dashboard</h2><span class="view-meta">${invs.length} invoice${invs.length===1?"":"s"}</span></div>
 
@@ -525,7 +525,7 @@ if(sv)sv.addEventListener("change",e=>{const tpl=findTemplate(e.target.value);if
 document.getElementById("i-add-client").addEventListener("click",()=>{const name=prompt("New client name:");if(!name)return;const c={id:uid("cl"),name:name.trim(),email:"",address:"",defaultRate:"",notes:""};state.clients.push(c);saveState();inv.clientId=c.id;document.getElementById("i-client").innerHTML=clientOpts();toast("Client added — open Clients to add full details");});
 document.getElementById("i-profile").addEventListener("change",e=>{inv.profileId=e.target.value;if(isNew){inv.number=nextInvoiceNumber(inv.profileId);document.getElementById("i-number").value=inv.number;}});
 document.getElementById("i-vat").addEventListener("change",e=>{inv.vatEnabled=e.target.checked;document.getElementById("i-vat-rate-field").hidden=!inv.vatEnabled;renderLines();renderTotals();});
-document.getElementById("i-vat-rate").addEventListener("input",e=>{inv.defaultVatRate=Number(e.target.value)||0;inv.lineItems.forEach(li=>li.vatRate=inv.defaultVatRate);renderLines();renderTotals();});
+document.getElementById("i-vat-rate").addEventListener("input",e=>{const old=Number(inv.defaultVatRate)||0;inv.defaultVatRate=Number(e.target.value)||0;inv.lineItems.forEach(li=>{if(li.vatRate==null||Number(li.vatRate)===old)li.vatRate=inv.defaultVatRate;});renderLines();renderTotals();});
 document.getElementById("i-issue").addEventListener("change",e=>{inv.issueDate=e.target.value;});
 document.getElementById("i-due").addEventListener("change",e=>{inv.dueDate=e.target.value;});
 document.getElementById("i-number").addEventListener("input",e=>{inv.number=e.target.value;});
@@ -537,7 +537,7 @@ if(!inv.number.trim()){toast("Invoice number required");return;}
 if(!inv.profileId){toast("Pick a profile");return;}
 if(!inv.clientId){toast("Pick a client");return;}
 inv.lineItems=inv.lineItems.map(li=>({...li,quantity:Number(li.quantity)||0,unitPrice:Number(li.unitPrice)||0,vatRate:Number(li.vatRate??inv.defaultVatRate)||0}));
-if(isNew){state.invoices.push(inv);if(inv.number===nextInvoiceNumber(inv.profileId))bumpInvoiceSeq(inv.profileId);}else{const i=state.invoices.findIndex(x=>x.id===inv.id);state.invoices[i]=inv;}
+if(isNew){state.invoices.push(inv);bumpInvoiceSeq(inv.profileId);}else{const i=state.invoices.findIndex(x=>x.id===inv.id);state.invoices[i]=inv;}
 saveState();toast(isNew?"Invoice saved":"Saved");closeModal();
 if(isNew)openInvoiceDetail(inv.id);else render();
 });
