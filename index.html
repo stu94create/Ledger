@@ -138,7 +138,7 @@ main{padding:24px 20px 40px}
 .doc-foot strong{color:var(--ink);font-family:var(--display);font-style:italic;font-weight:500}
 .doc-foot-block{margin-top:10px;white-space:pre-wrap}
 .toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);left:50%;transform:translateX(-50%);background:var(--green);color:var(--paper);padding:12px 20px;border-radius:var(--r-md);box-shadow:var(--shadow-2);z-index:200;font-size:.95rem;max-width:90%}
-@media print{body{background:#fff}.masthead,.tabs,main>.view-heading,.btn-row,.modal-head,.modal-foot,nav,.skip-link,#toast-host{display:none!important}#app{max-width:none;padding:0}.modal-backdrop{position:static;background:none;padding:0;display:block}.modal{box-shadow:none;border:0;max-width:none;margin:0}.modal-body{padding:0}.invoice-doc{border:0;box-shadow:none;padding:0}@page{margin:18mm}}
+@media print{body{background:#fff}#app,.invoice-status-row,.masthead,.tabs,.btn-row,.modal-head,.modal-foot,nav,.skip-link,#toast-host{display:none!important}.modal-backdrop{position:static;background:none;padding:0;display:block}.modal{box-shadow:none;border:0;max-width:none;margin:0}.modal-body{padding:0}.invoice-doc{border:0;box-shadow:none;padding:0}@page{margin:18mm}}
 @media (max-width:420px){.field-row,.doc-parties{grid-template-columns:1fr}.invoice-doc{padding:20px 16px}.invoice-doc-head{flex-direction:column;gap:10px}.doc-meta{text-align:left}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
 </style>
@@ -572,7 +572,7 @@ const inv=findInvoice(id);if(!inv)return;
 const eff=effectiveStatus(inv);
 const body=`<div class="invoice-doc" id="invoice-doc">${renderInvoiceDoc(inv)}</div>
 
-<div style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+<div class="invoice-status-row" style="margin-top:18px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
 <span class="pill pill-${eff}">${eff[0].toUpperCase()+eff.slice(1)}</span>
 ${inv.sentDate?`<span class="card-sub" style="font-family:var(--mono);font-size:.78rem">Sent ${esc(fmtDate(inv.sentDate))}</span>`:""}
 ${inv.paidDate?`<span class="card-sub" style="font-family:var(--mono);font-size:.78rem">Paid ${esc(fmtDate(inv.paidDate))}</span>`:""}
