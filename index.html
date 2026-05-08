@@ -310,7 +310,7 @@ ${state.lineItemTemplates.length===0?`<div class="empty" style="padding:20px"><p
 <p class="card-sub" style="margin-bottom:10px">New to all this? Start here. Tap a topic to expand it.</p>
 <details class="help-item"><summary>What an invoice actually is</summary><div class="help-body">
 <p>An <strong>invoice</strong> is a bill you send to someone after you've done work for them or sold them something. It says, in writing: <em>here's what I did, here's what it cost, here's how to pay me, and here's by when.</em></p>
-<p>An example: you do two coaching sessions for a client in May. At the end of the month you send them an invoice that lists the two sessions, the price of each, the total they owe, and your bank details. They pay. You both have a record of it.</p>
+<p>An example: you finish a couple of small jobs for a client during May. At the end of the month you send them an invoice that lists each job, the price of each, the total they owe, and your bank details. They pay. You both have a record of it.</p>
 </div></details>
 <details class="help-item"><summary>Why bother — why not just ask?</summary><div class="help-body">
 <p><strong>It's a clear record.</strong> You and the client both have it in writing. No "wait, what was that charge for again?" arguments months later.</p>
@@ -339,7 +339,7 @@ ${state.lineItemTemplates.length===0?`<div class="empty" style="padding:20px"><p
 <p>Tap the <strong>Clients</strong> tab, then <strong>New client</strong>. The only thing you really need is their name. If you also add their email and billing address, they show up on the invoice automatically. The <strong>default rate</strong> is just a hint — when you bill this person, that number pre-fills the line price for you.</p>
 </div></details>
 <details class="help-item"><summary>3. Save things you bill for often (optional)</summary><div class="help-body">
-<p>If you charge for the same kind of thing over and over — say, "Coaching session, 1 hour, €95" — save it once and reuse it. Go to Settings → <strong>Saved line items</strong> → <strong>New saved line</strong>. Inside any invoice you'll see a small dropdown that drops a saved line in without you having to retype it.</p>
+<p>If you charge for the same kind of thing over and over — say, "Hour of work, €95" or "Call-out fee, €120" — save it once and reuse it. Go to Settings → <strong>Saved line items</strong> → <strong>New saved line</strong>. Inside any invoice you'll see a small dropdown that drops a saved line in without you having to retype it.</p>
 </div></details>
 <details class="help-item"><summary>4. Make a new invoice</summary><div class="help-body">
 <p>Tap the green <strong>New invoice</strong> button on the Dashboard (or in the Invoices tab). Choose <strong>From</strong> (which of your profiles), <strong>Bill to</strong> (which client), and the dates — when you're issuing it and when it's due. Add what you're charging for with <strong>+ Add line</strong>, or pick a saved one from the dropdown.</p>
@@ -462,7 +462,7 @@ const isNew=!tid;
 const t=isNew?{id:uid("tpl"),description:"",quantity:1,unitPrice:"",vatRate:state.settings.defaultVatRate}:{...findTemplate(tid)};
 const body=`<form class="form" autocomplete="off">
 
-<div class="field"><label for="t-desc">Description</label><input type="text" id="t-desc" value="${esc(t.description)}" placeholder="e.g. Coaching session, 1 hour" required /></div>
+<div class="field"><label for="t-desc">Description</label><input type="text" id="t-desc" value="${esc(t.description)}" placeholder="e.g. Hour of work" required /></div>
 <div class="field-row">
 <div class="field"><label for="t-qty">Default qty / hours</label><div class="field-mono"><input type="number" id="t-qty" min="0" step="0.01" value="${t.quantity}" /></div></div>
 <div class="field"><label for="t-price">Unit price</label><div class="field-mono"><input type="number" id="t-price" min="0" step="0.01" value="${t.unitPrice}" /></div></div>
