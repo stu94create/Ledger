@@ -306,42 +306,70 @@ ${state.lineItemTemplates.length===0?`<div class="empty" style="padding:20px"><p
 <button class="btn btn-secondary" id="btn-history">Restore an earlier snapshot</button>
 <input type="file" id="restore-file" accept="application/json,.json" hidden />
 </div>
+<h3 style="margin-top:30px;margin-bottom:10px">What's an invoice?</h3>
+<p class="card-sub" style="margin-bottom:10px">New to all this? Start here. Tap a topic to expand it.</p>
+<details class="help-item"><summary>What an invoice actually is</summary><div class="help-body">
+<p>An <strong>invoice</strong> is a bill you send to someone after you've done work for them or sold them something. It says, in writing: <em>here's what I did, here's what it cost, here's how to pay me, and here's by when.</em></p>
+<p>An example: you do two coaching sessions for a client in May. At the end of the month you send them an invoice that lists the two sessions, the price of each, the total they owe, and your bank details. They pay. You both have a record of it.</p>
+</div></details>
+<details class="help-item"><summary>Why bother — why not just ask?</summary><div class="help-body">
+<p><strong>It's a clear record.</strong> You and the client both have it in writing. No "wait, what was that charge for again?" arguments months later.</p>
+<p><strong>It tends to get paid faster.</strong> Most people pay a proper invoice. Fewer people pay a casual text. Putting a due date on it sets the expectation.</p>
+<p><strong>Companies often need one.</strong> Many businesses literally can't pay you without one — their finance team needs the paper trail.</p>
+<p><strong>It's how you do your taxes.</strong> When you file your tax return, you need to show what came in and from whom. Invoices are where that information comes from.</p>
+<p><strong>It looks professional.</strong> A clean document signals you take the work seriously, and people take you more seriously back.</p>
+</div></details>
+<details class="help-item"><summary>What goes on one</summary><div class="help-body">
+<p>Every invoice has the same ingredients:</p>
+<p><strong>From</strong> — you. Name, address, email, phone, how to pay you (bank, IBAN, Revolut, etc.), and your VAT number if you have one.</p>
+<p><strong>Bill to</strong> — the client. Name, address, email.</p>
+<p><strong>Invoice number</strong> — a unique label like INV-2026-001 so the two of you can refer back to it later.</p>
+<p><strong>Dates</strong> — when you issued it, and when it's due to be paid.</p>
+<p><strong>Line items</strong> — what you're charging for, broken down line by line, with the price for each.</p>
+<p><strong>Total</strong> — the amount they owe, with VAT separated out if it applies.</p>
+<p>Ledger fills most of this in for you once you've set up your profile and saved the client. You only really have to type the bits that change each time, like the line items.</p>
+</div></details>
 <h3 style="margin-top:30px;margin-bottom:10px">How to use Ledger</h3>
 <p class="card-sub" style="margin-bottom:10px">Tap a topic to expand it.</p>
-<details class="help-item"><summary>1. Set up your profile</summary><div class="help-body">
-<p>Open <strong>Issuer profiles</strong> at the top of Settings and tap <strong>New profile</strong>. A profile is your "from" identity on every invoice — name, address, email, phone, optional VAT number, payment details (IBAN, BIC, Revolut tag), and an invoice prefix like INV or STU.</p>
-<p>You can have more than one profile, e.g. a personal one and a business one. Mark whichever you use most as the default — that one is pre-selected on every new invoice, but you can switch per invoice.</p>
+<details class="help-item"><summary>1. Set up "you" first</summary><div class="help-body">
+<p>Before you make your first invoice, tell Ledger who <strong>you</strong> are. In Settings, look at <strong>Issuer profiles</strong> near the top and tap <strong>New profile</strong>. Fill in your name, address, email, phone, and how people should pay you — bank details, IBAN, Revolut tag, whatever fits. The <strong>invoice prefix</strong> is just the bit at the start of every invoice number, like INV or STU. If you charge VAT, add your VAT number too.</p>
+<p>You can have more than one profile — say one personal, one business. Mark the one you use most as the <strong>default</strong>. That one will be picked for new invoices unless you change it.</p>
 </div></details>
-<details class="help-item"><summary>2. Add clients</summary><div class="help-body">
-<p>Tap the <strong>Clients</strong> tab and then <strong>New client</strong>. Only the name is required; email and address appear on the invoice when filled in. The default rate field pre-fills line items when you bill that client.</p>
+<details class="help-item"><summary>2. Add the people you bill</summary><div class="help-body">
+<p>Tap the <strong>Clients</strong> tab, then <strong>New client</strong>. The only thing you really need is their name. If you also add their email and billing address, they show up on the invoice automatically. The <strong>default rate</strong> is just a hint — when you bill this person, that number pre-fills the line price for you.</p>
 </div></details>
-<details class="help-item"><summary>3. Save line items you bill repeatedly (optional)</summary><div class="help-body">
-<p>Under <strong>Saved line items</strong> in Settings, save anything you bill regularly — e.g. "Coaching session, 1 hour" with a default rate. Inside an invoice you can then pick from a dropdown to insert one without retyping.</p>
+<details class="help-item"><summary>3. Save things you bill for often (optional)</summary><div class="help-body">
+<p>If you charge for the same kind of thing over and over — say, "Coaching session, 1 hour, €95" — save it once and reuse it. Go to Settings → <strong>Saved line items</strong> → <strong>New saved line</strong>. Inside any invoice you'll see a small dropdown that drops a saved line in without you having to retype it.</p>
 </div></details>
-<details class="help-item"><summary>4. Create an invoice</summary><div class="help-body">
-<p>Tap <strong>New invoice</strong> from the Dashboard or Invoices tab. Pick the profile (from), pick the client, set the issue and due dates. Add line items by tapping <strong>Add line</strong>, or use the saved-lines dropdown.</p>
-<p>Toggle <strong>Charge VAT</strong> if applicable — a VAT rate field appears, and per-line VAT rates can be edited individually. Save as a draft when ready.</p>
+<details class="help-item"><summary>4. Make a new invoice</summary><div class="help-body">
+<p>Tap the green <strong>New invoice</strong> button on the Dashboard (or in the Invoices tab). Choose <strong>From</strong> (which of your profiles), <strong>Bill to</strong> (which client), and the dates — when you're issuing it and when it's due. Add what you're charging for with <strong>+ Add line</strong>, or pick a saved one from the dropdown.</p>
+<p>If you need to charge VAT, tick <strong>Charge VAT on this invoice</strong> and a tax-rate field appears. Tap <strong>Save draft</strong> when you're done. Nothing has been sent yet — it's just saved on this device for you to review.</p>
 </div></details>
-<details class="help-item"><summary>5. Send an invoice to a client</summary><div class="help-body">
-<p>Open the invoice. Two buttons matter for sending:</p>
-<p><strong>Print / PDF</strong> opens the iOS print sheet — choose <strong>Save to Files</strong> to save a tagged PDF wherever you want.</p>
-<p><strong>Send by email</strong> opens Outlook or the default Mail app with a pre-filled body (greeting, invoice number, total, due date, payment details, sign-off).</p>
-<p>For a complete send to a client, do both: tap <strong>Print / PDF</strong> first to save the PDF, then tap <strong>Send by email</strong> and attach the saved PDF in the mail composer. Browsers can't auto-attach files — that's an iOS sandbox rule, not a bug.</p>
+<details class="help-item"><summary>5. Send it to the client</summary><div class="help-body">
+<p>Open the invoice. Two buttons do the work:</p>
+<p><strong>Print / PDF</strong> — opens iPhone's print/save sheet. Choose <strong>Save to Files</strong> to save the invoice as a PDF somewhere you can find it.</p>
+<p><strong>Send by email</strong> — opens your Mail or Outlook app with a friendly note already typed for you (greeting, invoice number, total, due date, payment details, sign-off).</p>
+<p>For a proper send: tap <strong>Print / PDF</strong> first to save the PDF, <em>then</em> tap <strong>Send by email</strong> and attach that PDF in the mail composer. iPhone won't auto-attach the file for you — that's an Apple rule, not a fault of this app.</p>
 </div></details>
-<details class="help-item"><summary>6. Track status</summary><div class="help-body">
-<p>Each invoice has a status: <strong>Draft</strong> (not sent yet), <strong>Sent</strong> (sent but unpaid), <strong>Overdue</strong> (sent and past the due date — set automatically), and <strong>Paid</strong>.</p>
-<p>From the invoice detail screen, use <strong>Mark as sent</strong> and <strong>Mark as paid</strong> to move it through. The Dashboard shows totals at a glance.</p>
+<details class="help-item"><summary>6. Mark it sent or paid as things progress</summary><div class="help-body">
+<p>Every invoice has one of four labels:</p>
+<p><strong>Draft</strong> — not sent yet, still being worked on.<br>
+<strong>Sent</strong> — out the door, waiting to be paid.<br>
+<strong>Overdue</strong> — sent, and the due date has passed (the app sets this for you).<br>
+<strong>Paid</strong> — money received.</p>
+<p>Open the invoice and tap <strong>Mark as sent</strong> or <strong>Mark as paid</strong> as things move along. The Dashboard at the top adds it all up so you can see at a glance what you're owed and what's come in.</p>
 </div></details>
-<details class="help-item"><summary>7. Edit and duplicate</summary><div class="help-body">
-<p>Open any invoice and tap <strong>Edit</strong> to change anything. Tap <strong>Duplicate</strong> to copy it as a new draft — you get the next invoice number, today's dates, and draft status, so it's quick to reuse for a regular client.</p>
+<details class="help-item"><summary>7. Change one or reuse it</summary><div class="help-body">
+<p>Open any invoice and tap <strong>Edit</strong> to change anything on it. Tap <strong>Duplicate</strong> to copy it as a fresh new draft — you get the next invoice number, today's dates, and Draft status. Handy when you bill the same person every month.</p>
 </div></details>
-<details class="help-item"><summary>8. Back up your data</summary><div class="help-body">
-<p>Your data lives only on this device. Tap <strong>Download backup</strong> in Settings periodically to save a JSON file you can store somewhere safe (Files, iCloud Drive, AirDrop to a Mac). <strong>Restore from file</strong> pulls it back if you switch devices or wipe data.</p>
+<details class="help-item"><summary>8. Keep a backup</summary><div class="help-body">
+<p>Your data lives only on this iPhone. Tap <strong>Download backup</strong> in Settings every now and then to save a small file copy somewhere safe — Files, iCloud Drive, or AirDrop to a Mac. If anything ever goes wrong (wrong tap, new phone, factory reset), <strong>Restore from file</strong> brings it all back.</p>
+<p>The app also keeps the last 20 saves on this device automatically, so if you make a mistake you can use <strong>Restore an earlier snapshot</strong> just above this section to roll back.</p>
 </div></details>
 <details class="help-item"><summary>9. Notes for VoiceOver</summary><div class="help-body">
-<p>Each invoice and client appears as a single tappable card — the whole card is one button so you don't have to pick through nested elements. Status (Sent, Paid, etc.) and totals are part of the card's announcement.</p>
-<p>Modals trap focus inside until you close them. The close button is at the top right of each modal; you can also dismiss with Escape on a keyboard.</p>
-<p>The on-screen invoice is fully readable with VoiceOver before you save or print, so always confirm the details in the app before you generate a PDF.</p>
+<p>Each invoice and client is a single tappable card — the whole card is one button, so you don't have to pick through nested bits. The status (Sent, Paid, etc.) and total are part of the card's spoken description.</p>
+<p>When a pop-up (modal) opens, focus is trapped inside it until you close it. The close button is at the top right of each pop-up; you can also dismiss it with Escape on a keyboard.</p>
+<p>The on-screen invoice is fully readable with VoiceOver before you save or print, so always confirm the details out loud in the app before you generate the PDF.</p>
 </div></details>
 <h3 style="margin-top:30px;margin-bottom:10px">Reset</h3>
 <p class="card-sub">Wipes all data. This cannot be undone.</p>
