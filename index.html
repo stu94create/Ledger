@@ -370,11 +370,20 @@ ${state.lineItemTemplates.length===0?`<div class="empty" style="padding:20px"><p
 <details class="help-item"><summary>7. Change one or reuse it</summary><div class="help-body">
 <p>Open any invoice and tap <strong>Edit</strong> to change anything on it. Tap <strong>Duplicate</strong> to copy it as a fresh new draft — you get the next invoice number, today's dates, and Draft status. Handy when you bill the same person every month.</p>
 </div></details>
-<details class="help-item"><summary>8. Keep a backup</summary><div class="help-body">
-<p>Your data lives only on this iPhone. Tap <strong>Download backup</strong> in Settings every now and then to save a small file copy somewhere safe — Files, iCloud Drive, or AirDrop to a Mac. If anything ever goes wrong (wrong tap, new phone, factory reset), <strong>Restore from file</strong> brings it all back.</p>
-<p>The app also keeps the last 20 saves on this device automatically, so if you make a mistake you can use <strong>Restore an earlier snapshot</strong> just above this section to roll back.</p>
+<details class="help-item"><summary>8. Keep your data safe</summary><div class="help-body">
+<p>Your data lives only on this iPhone — nothing is sent to any server. Good for privacy, but it means you're the only one with a copy. The app gives you four overlapping safety nets:</p>
+<p><strong>Add to Home Screen.</strong> In Safari, tap Share → <strong>Add to Home Screen</strong>, then open the app from the icon at least once. Settings → Backup &amp; restore should then show <strong>Storage: Persistent ✓</strong>, which means iOS won't clear your data after a week of not opening the app. If it still says <em>Best-effort</em>, back up by file more often.</p>
+<p><strong>Undo for accidental deletes.</strong> When you delete an invoice, client, profile or saved line, a gold "Undo" button appears for six seconds. Tap it and the item comes back exactly where it was. The same applies to <strong>Erase all data</strong>.</p>
+<p><strong>Restore an earlier snapshot.</strong> The app automatically keeps the last 20 saves on this device. If you save something you didn't mean to, or the Undo button has already faded, open Settings → <strong>Restore an earlier snapshot</strong> and pick the version you want to roll back to. The current state is itself snapshotted before the rollback, so you can flip back.</p>
+<p><strong>Backup file.</strong> Tap <strong>Download backup</strong> in Settings now and then to save a JSON file somewhere safe (Files, iCloud Drive, AirDrop to a Mac). If you switch phones, factory reset, or the snapshots aren't enough, <strong>Restore from file</strong> brings everything back. Settings warns you if it's been more than 14 days since the last backup.</p>
 </div></details>
-<details class="help-item"><summary>9. Notes for VoiceOver</summary><div class="help-body">
+<details class="help-item"><summary>9. Lock the app with Face ID and a passcode</summary><div class="help-body">
+<p>Optional. If you sometimes hand your unlocked phone to other people, you can put the app behind its own lock. In Settings → <strong>App lock (optional)</strong>, tap <strong>Enable app lock</strong>. You'll be asked to set a passcode (4 or more characters), and then offered Face ID or Touch ID for a faster unlock if your device supports it.</p>
+<p>From then on, every launch shows a lock screen. Use Face ID, or type your passcode. The app also re-locks itself after one minute in the background, so a quick switch to Mail and back doesn't expose your data.</p>
+<p>If Face ID fails on the lock screen, the passcode field is right there — no need to dismiss anything. If you forget your passcode <em>and</em> Face ID stops recognising you, tap <strong>Locked out?</strong> on the lock screen and use <strong>Erase all data</strong>. Your backup file then restores everything. <strong>Keep at least one backup file off the device for exactly this case</strong> — without one, the escape hatch becomes a one-way door.</p>
+<p>The lock is a privacy gate, not encryption. Anyone who can extract data from Safari's storage (developer tools, forensic access) still sees it. For day-to-day "don't show invoices to the person looking over my shoulder", it's plenty.</p>
+</div></details>
+<details class="help-item"><summary>10. Notes for VoiceOver</summary><div class="help-body">
 <p>Each invoice and client is a single tappable card — the whole card is one button, so you don't have to pick through nested bits. The status (Sent, Paid, etc.) and total are part of the card's spoken description.</p>
 <p>When a pop-up (modal) opens, focus is trapped inside it until you close it. The close button is at the top right of each pop-up; you can also dismiss it with Escape on a keyboard.</p>
 <p>The on-screen invoice is fully readable with VoiceOver before you save or print, so always confirm the details out loud in the app before you generate the PDF.</p>
