@@ -173,9 +173,11 @@ const BKEY="ledger.v1.lastBackup";
 const LKEY="ledger.v1.lock";
 const HMAX=20;
 const RELOCK_AFTER_MS=60000;
+const PBKDF2_ITERS=100000;
 let _persistGranted=false;
 let _isLocked=false;
 let _hiddenSince=null;
+let _pendingRelock=false;
 const uid=(p="id")=>p+"-"+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
 const DEFAULTS=()=>({profiles:[{id:uid("pf"),label:"Default",name:"",address:"",email:"",phone:"",vatNumber:"",paymentDetails:"",invoicePrefix:"INV",nextSeq:1,isDefault:true}],lineItemTemplates:[],clients:[],invoices:[],settings:{defaultVatRate:23,defaultPaymentTermsDays:14,currency:"EUR",locale:"en-IE"}});
 let state=loadState(),view="dashboard",invoiceFilter="all",lastFocus=null;
@@ -446,7 +448,7 @@ host._trap=e=>{if(e.key!=="Tab")return;const f=md.querySelectorAll('a[href],butt
 md.addEventListener("keydown",host._trap);
 setTimeout(()=>{const t=host.querySelector("#modal-title");if(t){t.setAttribute("tabindex","-1");t.focus();}},30);
 }
-function closeModal({silent}={}){const host=document.getElementById("modal-host");if(!host.firstChild)return;if(host._esc)document.removeEventListener("keydown",host._esc);host.innerHTML="";host.setAttribute("aria-hidden","true");host._esc=null;document.getElementById("app").inert=false;if(!silent&&lastFocus?.focus)try{lastFocus.focus();}catch{}}
+function closeModal({silent}={}){const host=document.getElementById("modal-host");if(!host.firstChild)return;if(host._esc)document.removeEventListener("keydown",host._esc);host.innerHTML="";host.setAttribute("aria-hidden","true");host._esc=null;document.getElementById("app").inert=false;if(!silent&&lastFocus?.focus)try{lastFocus.focus();}catch{}if(!silent&&_pendingRelock&&!_isLocked){_pendingRelock=false;setTimeout(lockNow,30);}}
 
 function openProfileModal(pid){
 const isNew=!pid;
@@ -754,8 +756,18 @@ async function platformAuthAvailable(){if(!webauthnAvailable())return false;try{
 const _b64u=buf=>btoa(String.fromCharCode(...new Uint8Array(buf)));
 const _fromB64u=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 function newSalt(){const a=new Uint8Array(16);crypto.getRandomValues(a);return [...a].map(b=>b.toString(16).padStart(2,"0")).join("");}
-async function hashPass(pass,salt){const data=new TextEncoder().encode(salt+":"+pass);const buf=await crypto.subtle.digest("SHA-256",data);return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");}
-async function verifyPasscode(input){const lock=getLockState();if(!lock.passSalt||!lock.passHash)return false;const h=await hashPass(input,lock.passSalt);return h===lock.passHash;}
+async function _hashPassLegacy(pass,salt){const data=new TextEncoder().encode(salt+":"+pass);const buf=await crypto.subtle.digest("SHA-256",data);return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");}
+async function hashPass(pass,salt,iters=PBKDF2_ITERS){const baseKey=await crypto.subtle.importKey("raw",new TextEncoder().encode(pass),"PBKDF2",false,["deriveBits"]);const saltBytes=new Uint8Array(salt.match(/../g).map(b=>parseInt(b,16)));const bits=await crypto.subtle.deriveBits({name:"PBKDF2",salt:saltBytes,iterations:iters,hash:"SHA-256"},baseKey,256);return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,"0")).join("");}
+async function verifyPasscode(input){
+const lock=getLockState();if(!lock.passSalt||!lock.passHash)return false;
+const iters=Number(lock.hashIter)||0;
+if(iters>0){const h=await hashPass(input,lock.passSalt,iters);return h===lock.passHash;}
+// Legacy single-round SHA-256. Verify, then upgrade in place to PBKDF2.
+const legacy=await _hashPassLegacy(input,lock.passSalt);
+if(legacy!==lock.passHash)return false;
+try{const ns=newSalt();const nh=await hashPass(input,ns,PBKDF2_ITERS);const cur=getLockState();setLockState({...cur,passSalt:ns,passHash:nh,hashIter:PBKDF2_ITERS});}catch(e){console.warn("Hash upgrade failed",e);}
+return true;
+}
 
 async function registerLockCredential(){
 const challenge=crypto.getRandomValues(new Uint8Array(32));
@@ -834,14 +846,14 @@ setTimeout(()=>{try{document.getElementById("reauth-input").focus();}catch{}},60
 function enableAppLock(){
 openSetPasscodeModal({title:"Set passcode",offerFaceIdAfter:true,onSave:(salt,hash)=>{
 const cur=getLockState();
-setLockState({enabled:true,passSalt:salt,passHash:hash,credentialId:cur.credentialId||null});
+setLockState({enabled:true,passSalt:salt,passHash:hash,hashIter:PBKDF2_ITERS,credentialId:cur.credentialId||null});
 toast("App lock enabled");
 }});
 }
 function addPasscode(){
 openSetPasscodeModal({title:"Add passcode",offerFaceIdAfter:false,onSave:(salt,hash)=>{
 const cur=getLockState();
-setLockState({...cur,enabled:true,passSalt:salt,passHash:hash});
+setLockState({...cur,enabled:true,passSalt:salt,passHash:hash,hashIter:PBKDF2_ITERS});
 toast("Passcode added");
 }});
 }
@@ -849,7 +861,7 @@ function changePasscode(){
 reauth(()=>{
 openSetPasscodeModal({title:"Change passcode",offerFaceIdAfter:false,onSave:(salt,hash)=>{
 const cur=getLockState();
-setLockState({...cur,passSalt:salt,passHash:hash});
+setLockState({...cur,passSalt:salt,passHash:hash,hashIter:PBKDF2_ITERS});
 toast("Passcode changed");
 }});
 });
@@ -977,7 +989,13 @@ ensurePersistentStorage().then(()=>{if(view==="settings"&&!_isLocked)renderSetti
 document.addEventListener("visibilitychange",()=>{
 const lock=getLockState();if(!lock.enabled)return;
 if(document.hidden){_hiddenSince=Date.now();}
-else if(_hiddenSince&&Date.now()-_hiddenSince>RELOCK_AFTER_MS&&!_isLocked){_hiddenSince=null;lockNow();}
+else if(_hiddenSince&&Date.now()-_hiddenSince>RELOCK_AFTER_MS&&!_isLocked){
+_hiddenSince=null;
+// Don't relock with a modal open — would silently destroy in-progress edits.
+// Defer until the user closes it; closeModal picks this up.
+if(document.getElementById("modal-host").firstChild){_pendingRelock=true;return;}
+lockNow();
+}
 else{_hiddenSince=null;}
 });
 </script>
