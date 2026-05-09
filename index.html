@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lora:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; worker-src 'self'; form-action 'none'; base-uri 'none'" />
 <link rel="manifest" href="manifest.webmanifest" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -138,6 +139,9 @@ main{padding:24px 20px 40px}
 .doc-foot strong{color:var(--ink);font-family:var(--display);font-style:italic;font-weight:500}
 .doc-foot-block{margin-top:10px;white-space:pre-wrap}
 .toast{position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 20px);left:50%;transform:translateX(-50%);background:var(--green);color:var(--paper);padding:12px 20px;border-radius:var(--r-md);box-shadow:var(--shadow-2);z-index:200;font-size:.95rem;max-width:90%}
+.toast-action{background:var(--gold);color:var(--ink);display:flex;gap:12px;align-items:center}
+.toast-action-btn{background:var(--ink);color:var(--paper);border:0;padding:6px 14px;border-radius:var(--r-sm);font:inherit;font-weight:600;cursor:pointer;min-height:36px;font-size:.9rem;font-family:var(--body)}
+.toast-action-btn:hover{background:var(--green)}
 @media print{body{background:#fff}#app,.invoice-status-row,.masthead,.tabs,.btn-row,.modal-head,.modal-foot,nav,.skip-link,#toast-host{display:none!important}.modal-backdrop{position:static;background:none;padding:0;display:block}.modal{box-shadow:none;border:0;max-width:none;margin:0}.modal-body{padding:0}.invoice-doc{border:0;box-shadow:none;padding:0}@page{margin:18mm}}
 @media (max-width:420px){.field-row,.doc-parties{grid-template-columns:1fr}.invoice-doc{padding:20px 16px}.invoice-doc-head{flex-direction:column;gap:10px}.doc-meta{text-align:left}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}}
@@ -176,7 +180,7 @@ const uid=(p="id")=>p+"-"+Math.random().toString(36).slice(2,9)+Date.now().toStr
 const DEFAULTS=()=>({profiles:[{id:uid("pf"),label:"Default",name:"",address:"",email:"",phone:"",vatNumber:"",paymentDetails:"",invoicePrefix:"INV",nextSeq:1,isDefault:true}],lineItemTemplates:[],clients:[],invoices:[],settings:{defaultVatRate:23,defaultPaymentTermsDays:14,currency:"EUR",locale:"en-IE"}});
 let state=loadState(),view="dashboard",invoiceFilter="all",lastFocus=null;
 function loadState(){try{const raw=localStorage.getItem(KEY);if(!raw)return DEFAULTS();let p=JSON.parse(raw);const def=DEFAULTS();if(p.business&&!p.profiles){const b=p.business,seq=p.settings?.nextInvoiceSeq||1;p.profiles=[{id:uid("pf"),label:b.name||"Default",name:b.name||"",address:b.address||"",email:b.email||"",phone:b.phone||"",vatNumber:b.vatNumber||"",paymentDetails:b.paymentDetails||"",invoicePrefix:b.invoicePrefix||"INV",nextSeq:seq,isDefault:true}];delete p.business;if(p.settings)delete p.settings.nextInvoiceSeq;}p.profiles=p.profiles?.length?p.profiles:def.profiles;if(!p.profiles.some(x=>x.isDefault))p.profiles[0].isDefault=true;p.lineItemTemplates=p.lineItemTemplates||[];p.clients=p.clients||[];p.invoices=p.invoices||[];const dpid=p.profiles.find(x=>x.isDefault)?.id||p.profiles[0].id;for(const inv of p.invoices){if(!inv.profileId||!p.profiles.some(x=>x.id===inv.profileId))inv.profileId=dpid;}return{profiles:p.profiles,lineItemTemplates:p.lineItemTemplates,clients:p.clients,invoices:p.invoices,settings:{...def.settings,...(p.settings||{})}};}catch(e){console.warn(e);return DEFAULTS();}}
-function saveState(){try{pushHistory();localStorage.setItem(KEY,JSON.stringify(state));}catch(e){console.warn(e);toast("Couldn't save — storage may be full");}}
+function saveState(){try{pushHistory();localStorage.setItem(KEY,JSON.stringify(state));}catch(e){console.warn(e);if(e&&(e.name==="QuotaExceededError"||e.code===22||e.code===1014))toast("Storage full — download a backup and free up space");else toast("Couldn't save — "+(e?.message||"unknown error"));}}
 function pushHistory(){try{const raw=localStorage.getItem(KEY);if(!raw)return;const h=JSON.parse(localStorage.getItem(HKEY)||"[]");if(h[0]&&h[0].snapshot===raw)return;h.unshift({at:new Date().toISOString(),snapshot:raw});while(h.length>HMAX)h.pop();localStorage.setItem(HKEY,JSON.stringify(h));}catch(e){console.warn(e);}}
 function loadHistory(){try{return JSON.parse(localStorage.getItem(HKEY)||"[]");}catch{return[];}}
 function daysSince(iso){if(!iso)return Infinity;const d=new Date(iso);return isNaN(d)?Infinity:(Date.now()-d.getTime())/86400000;}
@@ -198,7 +202,7 @@ function invoiceTotals(inv){let s=0,v=0;for(const it of inv.lineItems||[]){const
 function nextInvoiceNumber(pid){const p=findProfile(pid);return`${p.invoicePrefix||"INV"}-${new Date().getFullYear()}-${String(p.nextSeq||1).padStart(3,"0")}`;}
 function bumpInvoiceSeq(pid){const p=findProfile(pid);p.nextSeq=(p.nextSeq||1)+1;}
 const main=document.getElementById("main");
-function render({focusHeading=false}={}){document.querySelectorAll(".tab").forEach(t=>{if(t.dataset.view===view)t.setAttribute("aria-current","page");else t.removeAttribute("aria-current");});if(view==="dashboard")renderDashboard();else if(view==="invoices")renderInvoices();else if(view==="clients")renderClients();else if(view==="settings")renderSettings();if(focusHeading){const h=main.querySelector("h2");if(h&&!document.querySelector(".modal")){h.setAttribute("tabindex","-1");h.focus({preventScroll:false});}}}
+function render({focusHeading=false}={}){setPageTitle();document.querySelectorAll(".tab").forEach(t=>{if(t.dataset.view===view)t.setAttribute("aria-current","page");else t.removeAttribute("aria-current");});if(view==="dashboard")renderDashboard();else if(view==="invoices")renderInvoices();else if(view==="clients")renderClients();else if(view==="settings")renderSettings();if(focusHeading){const h=main.querySelector("h2");if(h&&!document.querySelector(".modal")){h.setAttribute("tabindex","-1");h.focus({preventScroll:false});}}}
 function setView(v){view=v;render({focusHeading:true});}
 
 function renderDashboard(){
@@ -395,7 +399,7 @@ document.getElementById("btn-restore").addEventListener("click",()=>document.get
 document.getElementById("restore-file").addEventListener("change",handleRestore);
 document.getElementById("btn-history").addEventListener("click",openHistoryModal);
 {const enable=document.getElementById("btn-enable-lock"),disable=document.getElementById("btn-disable-lock"),lockBtn=document.getElementById("btn-lock-now");if(enable)enable.addEventListener("click",enableAppLock);if(disable)disable.addEventListener("click",disableAppLock);if(lockBtn)lockBtn.addEventListener("click",lockNow);}
-document.getElementById("btn-wipe").addEventListener("click",()=>{if(!confirm("Erase all data? This cannot be undone."))return;if(!confirm("Really erase everything?"))return;state=DEFAULTS();saveState();toast("All data erased");setView("dashboard");});
+document.getElementById("btn-wipe").addEventListener("click",()=>{if(!confirm("Erase all data? You'll have 6 seconds to undo, and you can also use Restore an earlier snapshot afterwards."))return;if(!confirm("Really erase everything?"))return;const snap=JSON.parse(JSON.stringify(state));state=DEFAULTS();saveState();setView("dashboard");toastUndo("All data erased",()=>{state=snap;saveState();setView("dashboard");toast("Data restored");});});
 }
 
 function profileCard(p){
@@ -466,7 +470,7 @@ if(!state.profiles.some(x=>x.isDefault))state.profiles[0].isDefault=true;
 saveState();toast(isNew?"Profile added":"Profile saved");closeModal();renderSettings();
 });
 const del=document.querySelector('#modal-host [data-action="delete"]');
-if(del)del.addEventListener("click",()=>{if(!confirm(`Delete the "${p.label}" profile?`))return;state.profiles=state.profiles.filter(x=>x.id!==p.id);if(!state.profiles.some(x=>x.isDefault))state.profiles[0].isDefault=true;saveState();toast("Profile deleted");closeModal();renderSettings();});
+if(del)del.addEventListener("click",()=>{if(!confirm(`Delete the "${p.label}" profile?`))return;const idx=state.profiles.findIndex(x=>x.id===p.id);if(idx<0)return;const snap=JSON.parse(JSON.stringify(state.profiles[idx]));const wasDefault=snap.isDefault;state.profiles.splice(idx,1);if(!state.profiles.some(x=>x.isDefault))state.profiles[0].isDefault=true;saveState();closeModal();renderSettings();toastUndo(`Profile "${snap.label}" deleted`,()=>{state.profiles.splice(idx,0,snap);if(wasDefault)state.profiles.forEach(x=>x.isDefault=x.id===snap.id);saveState();renderSettings();toast("Profile restored");});});
 }
 
 function openTemplateModal(tid){
@@ -491,7 +495,7 @@ if(isNew)state.lineItemTemplates.push(o);else{const i=state.lineItemTemplates.fi
 saveState();toast(isNew?"Saved line added":"Saved");closeModal();renderSettings();
 });
 const del=document.querySelector('#modal-host [data-action="delete"]');
-if(del)del.addEventListener("click",()=>{if(!confirm("Delete this saved line?"))return;state.lineItemTemplates=state.lineItemTemplates.filter(x=>x.id!==t.id);saveState();toast("Saved line deleted");closeModal();renderSettings();});
+if(del)del.addEventListener("click",()=>{if(!confirm("Delete this saved line?"))return;const idx=state.lineItemTemplates.findIndex(x=>x.id===t.id);if(idx<0)return;const snap=JSON.parse(JSON.stringify(state.lineItemTemplates[idx]));state.lineItemTemplates.splice(idx,1);saveState();closeModal();renderSettings();toastUndo("Saved line deleted",()=>{state.lineItemTemplates.splice(idx,0,snap);saveState();renderSettings();toast("Saved line restored");});});
 }
 
 function openClientModal(cid){
@@ -515,7 +519,7 @@ if(isNew)state.clients.push(o);else{const i=state.clients.findIndex(x=>x.id===c.
 saveState();toast(isNew?"Client added":"Client saved");closeModal();renderClients();
 });
 const del=document.querySelector('#modal-host [data-action="delete"]');
-if(del)del.addEventListener("click",()=>{if(state.invoices.some(i=>i.clientId===c.id)){toast("Can't delete — this client has invoices");return;}if(!confirm(`Delete ${c.name}?`))return;state.clients=state.clients.filter(x=>x.id!==c.id);saveState();toast("Client deleted");closeModal();renderClients();});
+if(del)del.addEventListener("click",()=>{if(state.invoices.some(i=>i.clientId===c.id)){toast("Can't delete — this client has invoices");return;}if(!confirm(`Delete ${c.name}?`))return;const idx=state.clients.findIndex(x=>x.id===c.id);if(idx<0)return;const snap=JSON.parse(JSON.stringify(state.clients[idx]));state.clients.splice(idx,1);saveState();closeModal();renderClients();toastUndo(`${snap.name} deleted`,()=>{state.clients.splice(idx,0,snap);saveState();renderClients();toast("Client restored");});});
 }
 
 function openInvoiceModal(invoiceId){
@@ -604,7 +608,7 @@ saveState();toast(isNew?"Invoice saved":"Saved");closeModal();
 if(isNew)openInvoiceDetail(inv.id);else render();
 });
 const del=document.querySelector('#modal-host [data-action="delete"]');
-if(del)del.addEventListener("click",()=>{if(!confirm(`Delete invoice ${inv.number}?`))return;state.invoices=state.invoices.filter(x=>x.id!==inv.id);saveState();toast("Invoice deleted");closeModal();render();});
+if(del)del.addEventListener("click",()=>{if(!confirm(`Delete invoice ${inv.number}?`))return;const idx=state.invoices.findIndex(x=>x.id===inv.id);if(idx<0)return;const snap=JSON.parse(JSON.stringify(state.invoices[idx]));state.invoices.splice(idx,1);saveState();closeModal();render();toastUndo(`Invoice ${snap.number} deleted`,()=>{state.invoices.splice(idx,0,snap);saveState();render();toast("Invoice restored");});});
 }
 
 function openInvoiceDetail(id){
@@ -722,7 +726,16 @@ _persistGranted=!!granted;
 }
 function registerSW(){
 if(!("serviceWorker" in navigator))return;
-navigator.serviceWorker.register("./sw.js").catch(e=>console.warn("SW registration failed",e));
+navigator.serviceWorker.register("./sw.js").then(reg=>{
+  reg.addEventListener("updatefound",()=>{
+    const nw=reg.installing;if(!nw)return;
+    nw.addEventListener("statechange",()=>{
+      if(nw.state==="installed"&&navigator.serviceWorker.controller){
+        toastAction("A new version is available","Reload",()=>location.reload(),{sticky:true});
+      }
+    });
+  });
+}).catch(e=>console.warn("SW registration failed",e));
 }
 
 function getLockState(){try{return JSON.parse(localStorage.getItem(LKEY)||"{}");}catch{return{};}}
@@ -787,8 +800,26 @@ location.reload();
 });
 }
 
-let toastTimer=null;
-function toast(msg){const old=document.querySelector(".toast");if(old)old.remove();const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.remove(),2400);const sr=document.getElementById("toast-host");sr.textContent="";setTimeout(()=>sr.textContent=msg,30);}
+let toastTimer=null,_actionPending=false;
+function toast(msg){clearActionToast();const old=document.querySelector(".toast");if(old)old.remove();const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.remove(),2400);const sr=document.getElementById("toast-host");sr.textContent="";setTimeout(()=>sr.textContent=msg,30);}
+function clearActionToast(){_actionPending=false;if(toastTimer){clearTimeout(toastTimer);toastTimer=null;}const t=document.querySelector(".toast");if(t&&t.classList.contains("toast-action"))t.remove();}
+function toastAction(msg,label,fn,{timeoutMs=8000,sticky=false}={}){
+  clearActionToast();
+  const old=document.querySelector(".toast");if(old)old.remove();
+  const t=document.createElement("div");t.className="toast toast-action";
+  const span=document.createElement("span");span.textContent=msg;
+  const btn=document.createElement("button");btn.textContent=label;btn.className="toast-action-btn";btn.setAttribute("aria-label",label);
+  btn.addEventListener("click",()=>{clearActionToast();fn();});
+  t.appendChild(span);t.appendChild(btn);
+  document.body.appendChild(t);
+  _actionPending=true;
+  if(!sticky)toastTimer=setTimeout(clearActionToast,timeoutMs);
+  const sr=document.getElementById("toast-host");sr.textContent="";
+  setTimeout(()=>sr.textContent=msg+(sticky?"":". "+label+" available for "+Math.round(timeoutMs/1000)+" seconds"),30);
+}
+function toastUndo(msg,undoFn){toastAction(msg,"Undo",undoFn,{timeoutMs:6000});}
+const VIEW_TITLES={dashboard:"Dashboard",invoices:"Invoices",clients:"Clients",settings:"Settings"};
+function setPageTitle(){const t=VIEW_TITLES[view]||"";document.title=t?`Ledger — ${t}`:"Ledger — Invoices";}
 
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{if(_isLocked)return;setView(t.dataset.view);}));
 {
