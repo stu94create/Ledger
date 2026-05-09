@@ -166,8 +166,12 @@ main{padding:24px 20px 40px}
 const KEY="ledger.v1";
 const HKEY="ledger.v1.history";
 const BKEY="ledger.v1.lastBackup";
+const LKEY="ledger.v1.lock";
 const HMAX=20;
+const RELOCK_AFTER_MS=60000;
 let _persistGranted=false;
+let _isLocked=false;
+let _hiddenSince=null;
 const uid=(p="id")=>p+"-"+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-3);
 const DEFAULTS=()=>({profiles:[{id:uid("pf"),label:"Default",name:"",address:"",email:"",phone:"",vatNumber:"",paymentDetails:"",invoicePrefix:"INV",nextSeq:1,isDefault:true}],lineItemTemplates:[],clients:[],invoices:[],settings:{defaultVatRate:23,defaultPaymentTermsDays:14,currency:"EUR",locale:"en-IE"}});
 let state=loadState(),view="dashboard",invoiceFilter="all",lastFocus=null;
@@ -371,6 +375,13 @@ ${state.lineItemTemplates.length===0?`<div class="empty" style="padding:20px"><p
 <p>When a pop-up (modal) opens, focus is trapped inside it until you close it. The close button is at the top right of each pop-up; you can also dismiss it with Escape on a keyboard.</p>
 <p>The on-screen invoice is fully readable with VoiceOver before you save or print, so always confirm the details out loud in the app before you generate the PDF.</p>
 </div></details>
+<h3 style="margin-top:30px;margin-bottom:10px">App lock (optional)</h3>
+<p class="card-sub" style="margin-bottom:10px">Add a Face ID / Touch ID prompt before the app opens. Useful if you sometimes hand your unlocked phone to others.</p>
+<div class="stat" style="margin-bottom:10px">
+<div class="stat-label">Status</div>
+<div class="stat-sub" style="margin-top:4px">${getLockState().enabled?"<strong style=\"color:var(--green)\">On ✓</strong> — Face ID required to open the app, and again after the app has been in the background for 1 minute":"<strong>Off</strong> — anyone with your unlocked phone can open it"}</div>
+</div>
+<div class="btn-row">${getLockState().enabled?`<button class="btn btn-secondary" id="btn-lock-now">Lock now</button><button class="btn btn-secondary" id="btn-disable-lock">Disable lock</button>`:`<button class="btn btn-primary" id="btn-enable-lock">Enable Face ID / Touch ID lock</button>`}</div>
 <h3 style="margin-top:30px;margin-bottom:10px">Reset</h3>
 <p class="card-sub">Wipes all data. This cannot be undone.</p>
 <div class="btn-row"><button class="btn btn-danger" id="btn-wipe">Erase all data</button></div>`;
@@ -383,6 +394,7 @@ document.getElementById("btn-backup").addEventListener("click",downloadBackup);
 document.getElementById("btn-restore").addEventListener("click",()=>document.getElementById("restore-file").click());
 document.getElementById("restore-file").addEventListener("change",handleRestore);
 document.getElementById("btn-history").addEventListener("click",openHistoryModal);
+{const enable=document.getElementById("btn-enable-lock"),disable=document.getElementById("btn-disable-lock"),lockBtn=document.getElementById("btn-lock-now");if(enable)enable.addEventListener("click",enableAppLock);if(disable)disable.addEventListener("click",disableAppLock);if(lockBtn)lockBtn.addEventListener("click",lockNow);}
 document.getElementById("btn-wipe").addEventListener("click",()=>{if(!confirm("Erase all data? This cannot be undone."))return;if(!confirm("Really erase everything?"))return;state=DEFAULTS();saveState();toast("All data erased");setView("dashboard");});
 }
 
@@ -713,14 +725,86 @@ if(!("serviceWorker" in navigator))return;
 navigator.serviceWorker.register("./sw.js").catch(e=>console.warn("SW registration failed",e));
 }
 
+function getLockState(){try{return JSON.parse(localStorage.getItem(LKEY)||"{}");}catch{return{};}}
+function setLockState(s){try{localStorage.setItem(LKEY,JSON.stringify(s));}catch{}}
+function webauthnAvailable(){return!!(window.PublicKeyCredential&&navigator.credentials);}
+async function platformAuthAvailable(){if(!webauthnAvailable())return false;try{return await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();}catch{return false;}}
+const _b64u=buf=>btoa(String.fromCharCode(...new Uint8Array(buf)));
+const _fromB64u=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+
+async function registerLockCredential(){
+const challenge=crypto.getRandomValues(new Uint8Array(32));
+const userId=crypto.getRandomValues(new Uint8Array(16));
+const cred=await navigator.credentials.create({publicKey:{challenge,rp:{name:"Ledger"},user:{id:userId,name:"ledger@local",displayName:"Ledger"},pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}],authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required",residentKey:"preferred"},timeout:60000,attestation:"none"}});
+return _b64u(cred.rawId);
+}
+async function verifyLockCredential(credId){
+const challenge=crypto.getRandomValues(new Uint8Array(32));
+await navigator.credentials.get({publicKey:{challenge,allowCredentials:[{type:"public-key",id:_fromB64u(credId),transports:["internal"]}],userVerification:"required",timeout:60000}});
+}
+
+async function enableAppLock(){
+if(!await platformAuthAvailable()){toast("Face ID / Touch ID isn't available in this browser.");return;}
+try{const credId=await registerLockCredential();setLockState({enabled:true,credentialId:credId});toast("App lock enabled");renderSettings();}
+catch(e){if(e?.name==="NotAllowedError")toast("Cancelled");else toast("Couldn't enable: "+(e?.message||"unknown"));console.warn(e);}
+}
+async function disableAppLock(){
+const lock=getLockState();if(!lock.enabled)return;
+try{await verifyLockCredential(lock.credentialId);setLockState({});toast("App lock disabled");renderSettings();}
+catch(e){toast("Authentication failed — lock left on");console.warn(e);}
+}
+function lockNow(){
+const lock=getLockState();if(!lock.enabled)return;
+closeModal({silent:true});_isLocked=true;main.innerHTML="";showLockScreen();
+}
+
+function showLockScreen(){
+const lock=getLockState();if(!lock.enabled||!lock.credentialId){_isLocked=false;return;}
+const host=document.getElementById("modal-host");
+host.setAttribute("aria-hidden","false");
+host.innerHTML=`<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="lock-title" style="max-width:420px">
+<header class="modal-head" style="justify-content:center"><h2 id="lock-title">Ledger is locked</h2></header>
+<div class="modal-body" style="text-align:center">
+<div style="font-family:var(--display);font-style:italic;font-size:3rem;color:var(--gold);margin:8px 0 14px" aria-hidden="true">§</div>
+<p>Use Face ID, Touch ID, or your device passcode to unlock.</p>
+<div class="btn-row" style="justify-content:center;margin-top:18px"><button id="btn-do-unlock" class="btn btn-primary">Unlock</button></div>
+<details style="margin-top:28px;font-size:.85rem;color:var(--ink-muted)"><summary style="cursor:pointer">Locked out?</summary>
+<p style="margin-top:10px">If Face ID isn't working or you've lost access, you can erase all local data and start over. Any backup files you saved earlier will still work to restore.</p>
+<div class="btn-row" style="justify-content:center"><button id="btn-locked-erase" class="btn btn-danger">Erase all data</button></div>
+</details>
+</div></section></div>`;
+document.getElementById("app").inert=true;
+const tryUnlock=async()=>{
+try{await verifyLockCredential(lock.credentialId);_isLocked=false;host.innerHTML="";host.setAttribute("aria-hidden","true");document.getElementById("app").inert=false;render({focusHeading:true});toast("Unlocked");}
+catch(e){if(e?.name!=="NotAllowedError")console.warn(e);toast("Unlock failed — tap Unlock to try again");}
+};
+document.getElementById("btn-do-unlock").addEventListener("click",tryUnlock);
+document.getElementById("btn-locked-erase").addEventListener("click",()=>{
+if(!confirm("Erase ALL local data and disable the lock? This cannot be undone."))return;
+if(!confirm("Really erase everything?"))return;
+[KEY,HKEY,BKEY,LKEY].forEach(k=>{try{localStorage.removeItem(k);}catch{}});
+location.reload();
+});
+}
+
 let toastTimer=null;
 function toast(msg){const old=document.querySelector(".toast");if(old)old.remove();const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.remove(),2400);const sr=document.getElementById("toast-host");sr.textContent="";setTimeout(()=>sr.textContent=msg,30);}
 
-document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>setView(t.dataset.view)));
-render();
-if(state.profiles.every(p=>!p.name)&&state.invoices.length===0&&state.clients.length===0){setTimeout(()=>toast("Tip: open Settings to set up your first profile"),600);}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{if(_isLocked)return;setView(t.dataset.view);}));
+{
+const lock=getLockState();
+if(lock.enabled&&lock.credentialId){_isLocked=true;main.innerHTML="";showLockScreen();}
+else render();
+}
+if(!_isLocked&&state.profiles.every(p=>!p.name)&&state.invoices.length===0&&state.clients.length===0){setTimeout(()=>toast("Tip: open Settings to set up your first profile"),600);}
 window.addEventListener("load",registerSW);
-ensurePersistentStorage().then(()=>{if(view==="settings")renderSettings();});
+ensurePersistentStorage().then(()=>{if(view==="settings"&&!_isLocked)renderSettings();});
+document.addEventListener("visibilitychange",()=>{
+const lock=getLockState();if(!lock.enabled)return;
+if(document.hidden){_hiddenSince=Date.now();}
+else if(_hiddenSince&&Date.now()-_hiddenSince>RELOCK_AFTER_MS&&!_isLocked){_hiddenSince=null;lockNow();}
+else{_hiddenSince=null;}
+});
 </script>
 
 </body>
