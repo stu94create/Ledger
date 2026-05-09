@@ -379,10 +379,11 @@ ${state.lineItemTemplates.length===0?`<div class="empty" style="padding:20px"><p
 <p><strong>Restore an earlier snapshot.</strong> The app automatically keeps the last 20 saves on this device. If you save something you didn't mean to, or the Undo button has already faded, open Settings → <strong>Restore an earlier snapshot</strong> and pick the version you want to roll back to. The current state is itself snapshotted before the rollback, so you can flip back.</p>
 <p><strong>Backup file.</strong> Tap <strong>Download backup</strong> in Settings now and then to save a JSON file somewhere safe (Files, iCloud Drive, AirDrop to a Mac). If you switch phones, factory reset, or the snapshots aren't enough, <strong>Restore from file</strong> brings everything back. Settings warns you if it's been more than 14 days since the last backup.</p>
 </div></details>
-<details class="help-item"><summary>9. Lock the app with Face ID and a passcode</summary><div class="help-body">
-<p>Optional. If you sometimes hand your unlocked phone to other people, you can put the app behind its own lock. In Settings → <strong>App lock (optional)</strong>, tap <strong>Enable app lock</strong>. You'll be asked to set a passcode (4 or more characters), and then offered Face ID or Touch ID for a faster unlock if your device supports it.</p>
-<p>From then on, every launch shows a lock screen. Use Face ID, or type your passcode. The app also re-locks itself after one minute in the background, so a quick switch to Mail and back doesn't expose your data.</p>
+<details class="help-item"><summary>9. The app lock — passcode and Face ID</summary><div class="help-body">
+<p>Ledger requires a passcode to open. The very first time you launch, you'll see a setup screen asking for a passcode (4 or more characters). After saving, your iPhone offers Face ID or Touch ID as a faster unlock if it supports it — say yes for that and your face will let you in from then on, with the passcode as a fallback.</p>
+<p>Every launch after that shows a lock screen. Use Face ID, or type your passcode. The app also re-locks itself after one minute in the background, so a quick switch to Mail and back doesn't expose your data.</p>
 <p>If Face ID fails on the lock screen, the passcode field is right there — no need to dismiss anything. If you forget your passcode <em>and</em> Face ID stops recognising you, tap <strong>Locked out?</strong> on the lock screen and use <strong>Erase all data</strong>. Your backup file then restores everything. <strong>Keep at least one backup file off the device for exactly this case</strong> — without one, the escape hatch becomes a one-way door.</p>
+<p>You can change your passcode any time from Settings → App lock. You can also turn Face ID on or off from there. The lock itself can't be turned off — it's required to use the app.</p>
 <p>The lock is a privacy gate, not encryption. Anyone who can extract data from Safari's storage (developer tools, forensic access) still sees it. For day-to-day "don't show invoices to the person looking over my shoulder", it's plenty.</p>
 </div></details>
 <details class="help-item"><summary>10. Notes for VoiceOver</summary><div class="help-body">
@@ -390,8 +391,8 @@ ${state.lineItemTemplates.length===0?`<div class="empty" style="padding:20px"><p
 <p>When a pop-up (modal) opens, focus is trapped inside it until you close it. The close button is at the top right of each pop-up; you can also dismiss it with Escape on a keyboard.</p>
 <p>The on-screen invoice is fully readable with VoiceOver before you save or print, so always confirm the details out loud in the app before you generate the PDF.</p>
 </div></details>
-${(()=>{const lk=getLockState();const hf=!!lk.credentialId,hp=!!(lk.passSalt&&lk.passHash);const status=!lk.enabled?'<strong>Off</strong> — anyone with your unlocked phone can open it':hf&&hp?'<strong style="color:var(--green)">On ✓</strong> — passcode with Face ID for quicker unlock':hf?'<strong style="color:var(--green)">On ✓</strong> — Face ID only (no passcode backup — add one below in case Face ID stops working)':hp?'<strong style="color:var(--green)">On ✓</strong> — passcode only':'<strong style="color:var(--green)">On ✓</strong>';let btns;if(!lk.enabled){btns='<button class="btn btn-primary" id="btn-enable-lock">Enable app lock</button>';}else{const parts=['<button class="btn btn-secondary" id="btn-lock-now">Lock now</button>'];parts.push(hp?'<button class="btn btn-secondary" id="btn-change-pass">Change passcode</button>':'<button class="btn btn-secondary" id="btn-add-pass">Add passcode</button>');parts.push(hf?'<button class="btn btn-secondary" id="btn-remove-faceid">Turn off Face ID</button>':'<button class="btn btn-secondary" id="btn-add-faceid">Turn on Face ID</button>');parts.push('<button class="btn btn-secondary" id="btn-disable-lock">Disable lock</button>');btns=parts.join("");}return`<h3 style="margin-top:30px;margin-bottom:10px">App lock (optional)</h3>
-<p class="card-sub" style="margin-bottom:10px">A passcode and / or Face ID prompt before the app opens. Useful if you sometimes hand your unlocked phone to others. Lock is also re-applied after 1 minute in the background.</p>
+${(()=>{const lk=getLockState();const hf=!!lk.credentialId,hp=!!(lk.passSalt&&lk.passHash);const status=hf&&hp?'<strong style="color:var(--green)">Active ✓</strong> — passcode with Face ID for quicker unlock':hp?'<strong style="color:var(--green)">Active ✓</strong> — passcode only':hf?'<strong style="color:var(--gold)">Set up needed</strong> — add a passcode the next time you launch':'<strong style="color:var(--gold)">Set up needed</strong>';const parts=['<button class="btn btn-secondary" id="btn-lock-now">Lock now</button>'];if(hp)parts.push('<button class="btn btn-secondary" id="btn-change-pass">Change passcode</button>');parts.push(hf?'<button class="btn btn-secondary" id="btn-remove-faceid">Turn off Face ID</button>':'<button class="btn btn-secondary" id="btn-add-faceid">Turn on Face ID</button>');const btns=parts.join("");return`<h3 style="margin-top:30px;margin-bottom:10px">App lock</h3>
+<p class="card-sub" style="margin-bottom:10px">A passcode is required to open Ledger. Face ID is offered as a faster unlock if your device supports it. The lock is also re-applied after 1 minute in the background.</p>
 <div class="stat" style="margin-bottom:10px">
 <div class="stat-label">Status</div>
 <div class="stat-sub" style="margin-top:4px">${status}</div>
@@ -908,6 +909,52 @@ render({focusHeading:true});
 toast("Unlocked");
 }
 
+function showForcedSetup(){
+const cur=getLockState();
+const host=document.getElementById("modal-host");
+host.setAttribute("aria-hidden","false");
+host.innerHTML=`<div class="modal-backdrop"><section class="modal" role="dialog" aria-modal="true" aria-labelledby="setup-title" style="max-width:440px">
+<header class="modal-head" style="justify-content:center"><h2 id="setup-title">Set up your passcode</h2></header>
+<div class="modal-body">
+<div style="font-family:var(--display);font-style:italic;font-size:3rem;color:var(--gold);margin:8px auto 14px;text-align:center" aria-hidden="true">§</div>
+<p class="card-sub" style="margin-bottom:12px">Ledger needs a passcode to keep your invoice data private. ${cur.credentialId?"Your existing Face ID is kept and used as a fast-path. Set a passcode here as a backup in case Face ID stops recognising you.":"You'll be offered Face ID as a faster unlock straight after, if your device supports it."}</p>
+<form class="form" autocomplete="off" id="setup-form" novalidate>
+<div class="field"><label for="setup-pass1">New passcode</label><input type="password" id="setup-pass1" autocomplete="new-password" inputmode="text" /></div>
+<div class="field"><label for="setup-pass2">Confirm passcode</label><input type="password" id="setup-pass2" autocomplete="new-password" inputmode="text" /></div>
+<p id="setup-err" role="alert" style="color:var(--red);min-height:1em;margin:0"></p>
+<div class="btn-row" style="justify-content:center;margin-top:14px"><button type="submit" id="btn-setup-save" class="btn btn-primary">Save passcode</button></div>
+</form>
+<p class="card-sub" style="margin-top:18px;text-align:center;font-size:.85rem">A passcode is required before the app opens. Keep it somewhere safe — losing it means having to erase the data on this device and restore from a backup file.</p>
+</div></section></div>`;
+document.getElementById("app").inert=true;
+setTimeout(()=>{try{document.getElementById("setup-pass1").focus();}catch{}},60);
+document.getElementById("setup-form").addEventListener("submit",async e=>{
+e.preventDefault();
+const btn=document.getElementById("btn-setup-save");
+if(btn.disabled)return;
+const p1=document.getElementById("setup-pass1").value;
+const p2=document.getElementById("setup-pass2").value;
+const err=document.getElementById("setup-err");
+if(p1.length<4){err.textContent="Passcode must be at least 4 characters";return;}
+if(p1!==p2){err.textContent="The two passcodes don't match";return;}
+btn.disabled=true;
+try{
+const salt=newSalt(),hash=await hashPass(p1,salt);
+const cur2=getLockState();
+setLockState({enabled:true,passSalt:salt,passHash:hash,hashIter:PBKDF2_ITERS,credentialId:cur2.credentialId||null});
+}catch(ex){err.textContent="Couldn't save passcode — "+(ex?.message||"unknown error");btn.disabled=false;return;}
+// Offer Face ID, but only if the user doesn't already have one and the device supports it.
+const after=getLockState();
+if(!after.credentialId&&await platformAuthAvailable()&&confirm("Add Face ID for faster unlock?")){
+try{const credId=await registerLockCredential();const cur3=getLockState();setLockState({...cur3,credentialId:credId});}
+catch(ex){console.warn("Face ID enrol failed during forced setup",ex);}
+}
+host.innerHTML="";host.setAttribute("aria-hidden","true");document.getElementById("app").inert=false;
+toast("Lock set up");
+render({focusHeading:true});
+});
+}
+
 function showLockScreen(){
 const lock=getLockState();
 const hasFace=!!lock.credentialId;
@@ -980,8 +1027,11 @@ function setPageTitle(){const t=VIEW_TITLES[view]||"";document.title=t?`Ledger �
 document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>{if(_isLocked)return;setView(t.dataset.view);}));
 {
 const lock=getLockState();
-if(lock.enabled&&(lock.credentialId||(lock.passSalt&&lock.passHash))){_isLocked=true;main.innerHTML="";showLockScreen();}
-else render();
+const _hasPass=!!(lock.passSalt&&lock.passHash);
+if(lock.enabled&&_hasPass){_isLocked=true;main.innerHTML="";showLockScreen();}
+else if(lock.enabled&&lock.credentialId){_isLocked=true;main.innerHTML="";showForcedSetup();}
+else if(state.invoices.length||state.clients.length||state.lineItemTemplates.length||state.profiles.some(p=>p.name||p.email||p.address||p.paymentDetails)){_isLocked=true;main.innerHTML="";showForcedSetup();}
+else{main.innerHTML="";showForcedSetup();}
 }
 if(!_isLocked&&state.profiles.every(p=>!p.name)&&state.invoices.length===0&&state.clients.length===0){setTimeout(()=>toast("Tip: open Settings to set up your first profile"),600);}
 window.addEventListener("load",registerSW);
