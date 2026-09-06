@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign Off — make a proper email signature</title>
+<style>
+  :root {
+    --bg: #16130f;
+    --surface: #1d1915;
+    --field: #221e18;
+    --line-soft: #2c271f;   /* ordinary text fields */
+    --line: #3d362c;        /* selectable cards */
+    --line-strong: #554c3f;
+    --text: #f1ece1;
+    --text-soft: #b3a894;
+    --text-faint: #8a8170;
+    --green: #74c48d;
+    --green-bright: #97dcac;
+    --green-deep: #2f7d50;
+    --green-ink: #0e2a19;
+    --danger: #f0a3a3;
+    --radius: 11px;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 17px; -webkit-text-size-adjust: 100%; }
+  body { margin: 0; font-family: var(--sans); color: var(--text); background: var(--bg); line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 40rem; margin: 0 auto; padding: 0 1rem; }
+
+  .skip { position: absolute; left: -999px; top: 0; background: var(--green); color: var(--green-ink); padding: .6rem 1rem; z-index: 20; font-weight: 700; }
+  .skip:focus { left: 0; top: 0; }
+
+  /* Masthead */
+  header { position: relative; padding: 1.4rem 0 1.1rem; }
+  header h1 { font-family: var(--serif); font-weight: 400; margin: 0; font-size: clamp(2.6rem, 11vw, 3.4rem); line-height: .95; letter-spacing: -.015em; }
+  header h1 .off { color: var(--green); font-style: italic; }
+  header .tagline { font-family: var(--serif); font-size: 1.2rem; margin: .45rem 0 .25rem; }
+  header .sub { color: var(--text-soft); margin: 0; max-width: 30rem; }
+  header .rule { height: 2px; width: 4rem; background: var(--green); margin-top: 1rem; }
+
+  /* Overflow menu (top right) */
+  .more { position: absolute; top: 1.1rem; right: 0; }
+  .more summary { list-style: none; width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-soft); }
+  .more summary::-webkit-details-marker { display: none; }
+  .more summary:hover { border-color: var(--line-strong); color: var(--text); }
+  .more .menu { position: absolute; right: 0; top: 3.1rem; min-width: 13rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: .4rem; box-shadow: 0 12px 30px rgba(0,0,0,.45); z-index: 5; }
+  .more .menu button { width: 100%; text-align: left; background: transparent; border: 0; color: var(--text); padding: .8rem .9rem; border-radius: 8px; font-weight: 500; }
+  .more .menu button:hover { background: var(--field); }
+  .more .menu .danger { color: var(--danger); }
+
+  /* Stages */
+  .stage { border-top: 1px solid var(--line-soft); padding: .35rem 0 1.2rem; }
+  .stage > summary { list-style: none; display: flex; align-items: baseline; gap: .7rem; padding: .95rem 0 .75rem; cursor: pointer; }
+  .stage > summary::-webkit-details-marker { display: none; }
+  .stage h2, .stage-h { font-family: var(--serif); font-weight: 400; font-size: 1.5rem; margin: 0; display: flex; align-items: baseline; gap: .7rem; flex: 1; }
+  .n { font-family: var(--sans); font-weight: 700; font-size: .9rem; color: var(--green); letter-spacing: .03em; }
+  .chev { width: 1rem; height: 1rem; flex: none; align-self: center; stroke: var(--text-soft); fill: none; stroke-width: 2; transition: transform .15s ease; }
+  .stage[open] > summary .chev { transform: rotate(180deg); }
+  .stage-static { border-top: 1px solid var(--line-soft); padding: .95rem 0 1.4rem; }
+  .stage-static .stage-h { margin-bottom: .9rem; }
+  .lead { margin: 0 0 1rem; color: var(--text-soft); }
+
+  /* Fields */
+  label { display: block; font-weight: 600; margin: .75rem 0 .25rem; }
+  .hint { display: block; font-weight: 400; color: var(--text-soft); font-size: .9rem; margin-top: .25rem; }
+  .err { display: block; color: var(--danger); font-size: .9rem; font-weight: 600; margin-top: .3rem; }
+  .err:empty { display: none; }
+  input[type=text], input[type=url], input[type=email], input[type=tel], select, textarea {
+    width: 100%; font: inherit; min-height: 2.75rem; padding: .55rem .75rem; background: var(--field); color: var(--text);
+    border: 1px solid var(--line-soft); border-radius: var(--radius); transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  input::placeholder { color: var(--text-faint); }
+  input:hover, select:hover, textarea:hover { border-color: var(--line); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green-bright); box-shadow: 0 0 0 3px rgba(151,220,172,.25); }
+  input[aria-invalid="true"] { border-color: var(--danger); }
+  select { -webkit-appearance: none; appearance: none; padding-right: 2.5rem;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-soft) 50%), linear-gradient(135deg, var(--text-soft) 50%, transparent 50%);
+    background-position: calc(100% - 20px) 1.2rem, calc(100% - 14px) 1.2rem; background-size: 6px 6px, 6px 6px; background-repeat: no-repeat; }
+  textarea { min-height: 8rem; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+  @media (max-width: 30rem) { .row { grid-template-columns: 1fr; } }
+
+  fieldset { border: 0; padding: 0; margin: 1rem 0 0; min-width: 0; }
+  legend { font-weight: 600; padding: 0; margin-bottom: .5rem; }
+
+  /* Inline disclosure for optional fields */
+  details.inline { margin-top: .9rem; }
+  details.inline > summary { display: inline-flex; align-items: center; gap: .4rem; color: var(--green); font-weight: 600; cursor: pointer; list-style: none; min-height: 2.75rem; }
+  details.inline > summary::-webkit-details-marker { display: none; }
+  details.inline > summary .chev { stroke: var(--green); width: .85rem; height: .85rem; }
+  details.inline[open] > summary .chev { transform: rotate(180deg); }
+
+  /* Option rows (image source) */
+  .opts { display: grid; gap: .5rem; }
+  .opt { display: flex; align-items: flex-start; gap: .7rem; margin: 0; padding: .75rem .8rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); font-weight: 500; cursor: pointer; min-height: 2.9rem; }
+  .opt:has(input:checked) { border-color: var(--green); }
+  .opt input { width: 1.3rem; height: 1.3rem; margin: .1rem 0 0; flex: none; accent-color: var(--green); }
+  .opt .hint { margin-top: .15rem; }
+
+  /* Layout cards — stacked */
+  .cards { display: grid; gap: .5rem; }
+  .card { position: relative; display: flex; align-items: center; gap: .9rem; margin: 0; padding: .7rem .8rem; cursor: pointer; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-height: 3.6rem; }
+  .card:has(input:checked) { border-color: var(--green); background: #1f1b16; }
+  .card input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; }
+  .card .schema { flex: none; width: 58px; height: 42px; background: #0f0d0a; border: 1px solid var(--line-soft); border-radius: 6px; position: relative; }
+  .schema i { position: absolute; display: block; background: #4a4236; border-radius: 1px; }
+  .schema .s-line { background: var(--green); }
+  .card .txt { flex: 1; min-width: 0; }
+  .card .nm { font-weight: 700; }
+  .card .ds { color: var(--text-soft); font-size: .88rem; }
+  .tick { width: 1.15rem; height: 1.15rem; border-radius: 50%; border: 1.5px solid var(--line-strong); flex: none; }
+  .card:has(input:checked) .tick, .sw:has(input:checked) .tick { border-color: var(--green); background: radial-gradient(circle, var(--green) 40%, transparent 46%); }
+
+  /* Colour swatches */
+  .swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+  @media (max-width: 24rem) { .swatches { grid-template-columns: 1fr 1fr; } }
+  .sw { position: relative; display: flex; align-items: center; gap: .6rem; margin: 0; padding: .6rem .65rem; cursor: pointer; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-height: 3.2rem; }
+  .sw:has(input:checked) { border-color: var(--green); }
+  .sw input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; }
+  .sw .dot { width: 1.5rem; height: 1.5rem; border-radius: 50%; flex: none; border: 1px solid rgba(255,255,255,.15); }
+  .sw .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .sw .nm { font-weight: 600; font-size: .92rem; line-height: 1.25; }
+  .sw .hex { color: var(--text-faint); font-size: .74rem; font-family: ui-monospace, Menlo, Consolas, monospace; line-height: 1.2; }
+  .sw .tick { display: none; }
+  .sw:has(input:checked) .tick { display: block; }
+
+  /* Social rows — compact list */
+  .slist { border-top: 1px solid var(--line-soft); }
+  .srow { display: flex; align-items: center; gap: .8rem; margin: 0; padding: .55rem .2rem; min-height: 3.1rem; border-bottom: 1px solid var(--line-soft); font-weight: 500; cursor: pointer; }
+  .srow input { width: 1.35rem; height: 1.35rem; margin: 0; accent-color: var(--green); flex: none; }
+  .sub { padding: .1rem 0 .8rem 2.15rem; border-bottom: 1px solid var(--line-soft); }
+  .sub label { margin-top: .5rem; font-weight: 500; color: var(--text-soft); font-size: .92rem; }
+  .sub input { min-height: 2.75rem; padding: .5rem .7rem; }
+  .sub[hidden] { display: none; }
+
+  /* Upload */
+  .drop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; width: 100%; min-height: 7rem; padding: 1rem; cursor: pointer; background: var(--surface); color: var(--text); border: 1px dashed var(--line-strong); border-radius: var(--radius); font: inherit; font-weight: 600; }
+  .drop:hover { border-color: var(--green); }
+  .drop svg { width: 1.8rem; height: 1.8rem; stroke: var(--green); fill: none; stroke-width: 1.8; }
+  .drop .small { font-weight: 400; color: var(--text-soft); font-size: .9rem; }
+  .thumbwrap { display: flex; align-items: center; gap: .9rem; padding: .7rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+  .thumbwrap img { width: 56px; height: 56px; object-fit: cover; border-radius: 8px; background: #fff; flex: none; }
+  .thumbwrap .meta { min-width: 0; color: var(--text-soft); font-size: .9rem; }
+  .thumbwrap .meta b { color: var(--text); display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* Segmented control */
+  .seg { display: inline-flex; padding: 3px; background: var(--field); border: 1px solid var(--line); border-radius: 999px; gap: 2px; }
+  .seg label { position: relative; margin: 0; padding: .35rem .9rem; border-radius: 999px; font-weight: 600; cursor: pointer; color: var(--text-soft); min-height: 2.5rem; display: flex; align-items: center; gap: .35rem; }
+  .seg input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; }
+  .seg label:has(input:checked) { background: var(--green); color: var(--green-ink); }
+  .seg label:has(input:checked)::before { content: "✓"; font-size: .8rem; }
+
+  /* Buttons */
+  button { font: inherit; font-weight: 600; cursor: pointer; min-height: 3rem; padding: .7rem 1.1rem; border-radius: var(--radius); border: 1px solid transparent; }
+  .btn-primary { background: var(--green); color: var(--green-ink); border-color: var(--green-deep); font-weight: 700; width: 100%; font-size: 1.05rem; min-height: 3.4rem; }
+  .btn-primary:hover { background: var(--green-bright); }
+  .btn-secondary { background: transparent; color: var(--text); border-color: var(--line-strong); }
+  .btn-secondary:hover { border-color: var(--green); color: var(--green); }
+  .btn-small { min-height: 2.75rem; padding: .5rem .9rem; font-size: .95rem; }
+  .actions { display: flex; flex-wrap: wrap; gap: .6rem; margin: .8rem 0; }
+
+  /* Preview */
+  .preview-head { margin-bottom: .8rem; }
+  .preview-head .seg { margin-top: .6rem; }
+  .preview-head .seg label { min-height: 2.25rem; padding: .25rem .8rem; font-size: .9rem; }
+  .email { background: #fbfaf7; color: #333; border-radius: var(--radius); border: 1px solid #000; box-shadow: 10px 10px 0 rgba(116,196,141,.2); padding: 1.2rem 1.3rem 1.4rem; margin: 0 auto .4rem; transition: max-width .2s ease; }
+  .email.is-mobile { max-width: 340px; }
+  .email .em-meta { font-size: .82rem; color: #7a7266; border-bottom: 1px solid #e5e0d6; padding-bottom: .5rem; margin-bottom: .85rem; line-height: 1.7; }
+  .email .em-meta b { color: #2a2620; min-width: 3.6rem; display: inline-block; font-weight: 600; }
+  .email .em-body { font-size: .95rem; color: #3a352d; margin-bottom: 1.1rem; }
+  .preview { overflow-x: auto; }
+
+  .status { margin-top: .6rem; color: var(--text); }
+  .status:not(:empty) { padding: .7rem .9rem; border-left: 3px solid var(--green); background: var(--surface); border-radius: 0 var(--radius) var(--radius) 0; }
+  .btn-primary.done { background: var(--green-deep); color: #fff; border-color: var(--green-deep); }
+
+  details.help { border-top: 1px solid var(--line-soft); padding: .6rem 0; }
+  details.help:last-of-type { border-bottom: 1px solid var(--line-soft); }
+  details.help > summary { font-weight: 600; cursor: pointer; padding: .4rem 0; min-height: 2.75rem; display: flex; align-items: center; justify-content: space-between; list-style: none; }
+  details.help > summary::-webkit-details-marker { display: none; }
+  details.help[open] > summary .chev { transform: rotate(180deg); }
+  details h3 { font-size: 1rem; margin: 1rem 0 .3rem; }
+  details ol { padding-left: 1.3rem; margin: .2rem 0; color: var(--text-soft); }
+  details p { color: var(--text-soft); }
+
+  :focus-visible { outline: 3px solid var(--green-bright); outline-offset: 2px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  footer { border-top: 1px solid var(--line-soft); padding: 1rem 0 2.5rem; color: var(--text-faint); font-size: .9rem; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (prefers-contrast: more) { :root { --text-soft: #d2c9b8; --line-soft: #5a5145; --line: #7a7160; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#s1">Skip to the form</a>
+
+<div class="wrap">
+  <header>
+    <h1>Sign <span class="off">Off</span></h1>
+    <p class="tagline">A proper email signature in five minutes.</p>
+    <p class="sub">Fill in your details, choose a look, and copy it into Mail, Outlook or Gmail.</p>
+    <div class="rule" aria-hidden="true"></div>
+
+    <details class="more" id="moreMenu">
+      <summary aria-label="More options">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+      </summary>
+      <div class="menu">
+        <button type="button" id="btnClear" class="danger">Clear everything and start again</button>
+      </div>
+    </details>
+  </header>
+
+  <main>
+    <form id="form" novalidate autocomplete="on">
+
+      <details class="stage" open>
+        <summary>
+          <h2 id="s1"><span class="n" aria-hidden="true">01</span>Your details</h2>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+
+        <label for="name">Full name</label>
+        <input id="name" type="text" data-key="name" autocomplete="name">
+        <div class="row">
+          <div><label for="title">Job title</label><input id="title" type="text" data-key="title" autocomplete="organization-title"></div>
+          <div><label for="company">Company or organisation</label><input id="company" type="text" data-key="company" autocomplete="organization"></div>
+        </div>
+        <div class="row">
+          <div><label for="phone">Phone</label><input id="phone" type="tel" data-key="phone" autocomplete="tel"></div>
+          <div>
+            <label for="email">Email</label>
+            <input id="email" type="email" data-key="email" autocomplete="email" aria-describedby="err_email">
+            <span class="err" id="err_email" role="alert"></span>
+          </div>
+        </div>
+        <label for="website">Website</label>
+        <input id="website" type="url" data-key="website" autocomplete="url" aria-describedby="hint_website err_website">
+        <span class="hint" id="hint_website">You can leave off the https://</span>
+        <span class="err" id="err_website" role="alert"></span>
+
+        <details class="inline">
+          <summary>More details: tagline and address <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <label for="tagline">Tagline</label>
+          <input id="tagline" type="text" data-key="tagline" aria-describedby="hint_tagline">
+          <span class="hint" id="hint_tagline">One short line, such as a motto or your podcast name.</span>
+          <label for="address">Address</label>
+          <input id="address" type="text" data-key="address" autocomplete="street-address" aria-describedby="hint_address">
+          <span class="hint" id="hint_address">Keep it to one line.</span>
+        </details>
+      </details>
+
+      <details class="stage" open>
+        <summary>
+          <h2 id="s2"><span class="n" aria-hidden="true">02</span>The look</h2>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+
+        <fieldset>
+          <legend>Signature layout</legend>
+          <div class="cards" id="layouts">
+            <label class="card">
+              <input type="radio" name="layout" value="classic" data-key="layout" checked>
+              <span class="schema" aria-hidden="true">
+                <i style="top:6px;left:6px;width:20px;height:20px;border-radius:50%;background:#57503f"></i>
+                <i style="top:6px;left:30px;width:22px;height:4px"></i>
+                <i class="s-line" style="top:14px;left:30px;width:12px;height:2px"></i>
+                <i style="top:22px;left:30px;width:20px;height:3px"></i>
+                <i style="top:29px;left:30px;width:16px;height:3px"></i>
+              </span>
+              <span class="txt"><span class="nm">Classic</span><span class="ds"> Everything stacked in one column.</span></span>
+              <span class="tick" aria-hidden="true"></span>
+            </label>
+            <label class="card">
+              <input type="radio" name="layout" value="sidebar" data-key="layout">
+              <span class="schema" aria-hidden="true">
+                <i style="top:6px;left:6px;width:14px;height:30px;border-radius:3px;background:#57503f"></i>
+                <i class="s-line" style="top:6px;left:25px;width:2px;height:30px"></i>
+                <i style="top:8px;left:32px;width:20px;height:4px"></i>
+                <i style="top:17px;left:32px;width:16px;height:3px"></i>
+                <i style="top:24px;left:32px;width:18px;height:3px"></i>
+                <i style="top:31px;left:32px;width:12px;height:3px"></i>
+              </span>
+              <span class="txt"><span class="nm">Sidebar</span><span class="ds"> Logo on the left, details on the right.</span></span>
+              <span class="tick" aria-hidden="true"></span>
+            </label>
+            <label class="card">
+              <input type="radio" name="layout" value="compact" data-key="layout">
+              <span class="schema" aria-hidden="true">
+                <i style="top:14px;left:6px;width:46px;height:4px"></i>
+                <i class="s-line" style="top:23px;left:6px;width:28px;height:2px"></i>
+              </span>
+              <span class="txt"><span class="nm">Compact</span><span class="ds"> Two tight lines. Good for replies.</span></span>
+              <span class="tick" aria-hidden="true"></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Signature accent colour</legend>
+          <div class="swatches" id="colours"></div>
+        </fieldset>
+        <details class="inline">
+          <summary>Custom colour code <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <label for="customColour">Six-digit colour code</label>
+          <input id="customColour" type="text" data-key="customColour" placeholder="#ff6600" aria-describedby="hint_custom err_custom">
+          <span class="hint" id="hint_custom">Like #ff6600. Overrides the swatch above.</span>
+          <span class="err" id="err_custom" role="alert"></span>
+        </details>
+
+        <label for="font">Font</label>
+        <select id="font" data-key="font">
+          <option value="Arial, Helvetica, sans-serif">Arial (safe everywhere)</option>
+          <option value="Georgia, 'Times New Roman', serif">Georgia (classic serif)</option>
+          <option value="Verdana, Geneva, sans-serif">Verdana (wide and readable)</option>
+          <option value="'Trebuchet MS', Helvetica, sans-serif">Trebuchet</option>
+          <option value="'Segoe UI', Tahoma, Arial, sans-serif">Segoe UI</option>
+        </select>
+      </details>
+
+      <details class="stage">
+        <summary>
+          <h2 id="s3"><span class="n" aria-hidden="true">03</span>Branding and social links</h2>
+          <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </summary>
+        <p class="lead">Optional. A signature with no picture is the most reliable of all, so skipping this is a perfectly good choice.</p>
+
+        <fieldset>
+          <legend>Where is your logo or photo?</legend>
+          <div class="opts">
+            <label class="opt"><input type="radio" name="imageMode" value="none" data-key="imageMode" checked><span>No image</span></label>
+            <label class="opt"><input type="radio" name="imageMode" value="embed" data-key="imageMode" aria-describedby="hint_embed"><span>On my phone or computer<span class="hint" id="hint_embed">Pick it from Photos or Files. Shows in Apple Mail and Outlook, but not for people reading in Gmail.</span></span></label>
+            <label class="opt"><input type="radio" name="imageMode" value="link" data-key="imageMode" aria-describedby="hint_link"><span>At a web address<span class="hint" id="hint_link">Works everywhere, including Gmail. The picture must be online first.</span></span></label>
+          </div>
+        </fieldset>
+
+        <div id="embedPanel" hidden>
+          <button type="button" class="drop" id="btnChoose" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5l5 5"/><path d="M4 15v4a1 1 0 001 1h14a1 1 0 001-1v-4"/></svg>
+            <span>Add logo or photo</span><span class="small">From Photos or Files</span>
+          </button>
+          <div class="thumbwrap" id="thumbWrap" hidden>
+            <img id="thumb" alt=""><div class="meta"><b id="thumbName">image</b><span id="thumbSize"></span></div>
+          </div>
+          <div class="actions" id="imageActions" hidden>
+            <button type="button" id="btnReplace" class="btn-secondary btn-small">Replace</button>
+            <button type="button" id="btnRemoveImage" class="btn-secondary btn-small">Remove</button>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true">
+        </div>
+
+        <div id="linkPanel" hidden>
+          <label for="imageUrl">Image web address</label>
+          <input id="imageUrl" type="url" data-key="imageUrl" aria-describedby="hint_imageurl">
+          <span class="hint" id="hint_imageurl">A direct link to the picture itself, ending in .png or .jpg.</span>
+          <details class="inline">
+            <summary>How to get a web address for a picture on your phone <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <ol>
+              <li>In Safari, go to postimages.org. No account is needed.</li>
+              <li>Tap Choose images, then pick your logo from Photos or Files.</li>
+              <li>When it finishes, find the box labelled Direct link and copy it.</li>
+              <li>Paste it into the box above.</li>
+            </ol>
+            <p>Links from iCloud Drive, Google Drive, Dropbox or OneDrive won't work here. They open a web page rather than the picture itself.</p>
+          </details>
+        </div>
+
+        <div id="imageOptions" hidden>
+          <label for="imageAlt">Image description</label>
+          <input id="imageAlt" type="text" data-key="imageAlt" aria-describedby="hint_alt">
+          <span class="hint" id="hint_alt">What a screen reader says, for example "Tech Doc Podcast logo".</span>
+          <div class="row">
+            <div><label for="imageSize">Image size</label>
+              <select id="imageSize" data-key="imageSize">
+                <option value="64">64 pixels (small)</option><option value="90" selected>90 pixels (medium)</option><option value="120">120 pixels (large)</option>
+              </select></div>
+            <div><label for="imageShape">Shape</label>
+              <select id="imageShape" data-key="imageShape">
+                <option value="square">Square</option><option value="round">Circle (good for a headshot)</option>
+              </select></div>
+          </div>
+        </div>
+
+        <fieldset>
+          <legend>Social links</legend>
+          <div class="seg" role="radiogroup" aria-label="Show social links as">
+            <label><input type="radio" name="socialStyle" value="icons" data-key="socialStyle" checked>Icons</label>
+            <label><input type="radio" name="socialStyle" value="text" data-key="socialStyle">Text</label>
+          </div>
+          <div class="slist" id="socials" style="margin-top:.8rem"></div>
+        </fieldset>
+
+        <details class="inline">
+          <summary>Advanced: use your own icon images <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <label for="iconBase">Icon folder web address</label>
+          <input id="iconBase" type="url" data-key="iconBase" aria-describedby="hint_iconbase">
+          <span class="hint" id="hint_iconbase">A public folder with facebook.png, instagram.png, linkedin.png, x.png, youtube.png, tiktok.png and website.png. Leave blank for the built-in set.</span>
+          <label for="iconSize">Icon size</label>
+          <select id="iconSize" data-key="iconSize">
+            <option value="20">20 pixels</option><option value="24" selected>24 pixels</option><option value="32">32 pixels</option>
+          </select>
+        </details>
+      </details>
+    </form>
+
+    <section class="stage-static" aria-labelledby="s4">
+      <div class="preview-head">
+        <h2 class="stage-h" id="s4"><span class="n" aria-hidden="true">04</span>Preview</h2>
+        <div class="seg" role="radiogroup" aria-label="Preview width">
+          <label><input type="radio" name="pw" value="desktop" checked>Desktop</label>
+          <label><input type="radio" name="pw" value="mobile">Mobile</label>
+        </div>
+      </div>
+      <div class="email" id="emailSurface" role="group" aria-label="Live preview, shown inside an example email">
+        <div class="em-meta" aria-hidden="true"><b>To</b> A colleague<br><b>Subject</b> Catching up next week</div>
+        <div class="em-body" aria-hidden="true">Thanks again for today. I'll send the notes on Monday.<br><br>All the best,</div>
+        <div class="preview" id="preview"></div>
+      </div>
+      <div class="actions"><button type="button" id="btnDescribe" class="btn-secondary btn-small">Describe how it looks</button></div>
+    </section>
+
+    <section class="stage-static" aria-labelledby="s5">
+      <h2 class="stage-h" id="s5"><span class="n" aria-hidden="true">05</span>Copy your signature</h2>
+      <button type="button" id="btnCopyRich" class="btn-primary">Copy signature</button>
+      <div class="status" role="status" aria-live="polite" id="status"></div>
+
+      <details class="help">
+        <summary>How to add it to your email app <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <h3>Mail on iPhone and iPad</h3>
+        <ol><li>Press Copy signature.</li><li>Go to Settings, Apps, Mail, Signature, and paste.</li><li>If the colours and layout disappear, shake the phone (or use the undo gesture) and choose Undo Change Attributes.</li></ol>
+        <h3>Outlook (Windows or Mac)</h3>
+        <ol><li>Press Copy signature.</li><li>Go to Settings, Mail, Signatures, then New signature.</li><li>Paste into the signature box and save.</li></ol>
+        <h3>Gmail on the web</h3>
+        <ol><li>Press Copy signature.</li><li>Open Settings, See all settings, scroll to Signature and choose Create new.</li><li>Paste, then press Save Changes at the bottom.</li></ol>
+        <h3>Apple Mail on Mac</h3>
+        <ol><li>Press Copy signature.</li><li>Open Mail, Settings, Signatures, choose the account and press the plus button.</li><li>Paste into the right-hand box. Untick "Always match my default message font".</li></ol>
+      </details>
+      <details class="help">
+        <summary>For the technically minded <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <div class="actions">
+          <button type="button" id="btnCopyHtml" class="btn-secondary btn-small">Copy HTML code</button>
+          <button type="button" id="btnCopyText" class="btn-secondary btn-small">Copy plain text</button>
+        </div>
+        <label for="html">Signature HTML</label>
+        <textarea id="html" readonly spellcheck="false"></textarea>
+        <label for="plain">Plain text version</label>
+        <textarea id="plain" readonly spellcheck="false"></textarea>
+      </details>
+    </section>
+  </main>
+
+  <footer>Sign Off keeps your details on this device only. Nothing is sent anywhere. Made in Sligo.</footer>
+</div>
+
+<script>
+
+(function () {
+  'use strict';
+
+  const DEFAULT_ICON_BASE = 'https://stu94create.github.io/Ledger/icons';
+  const PLATFORMS = [
+    { id: 'facebook',  label: 'Facebook',  file: 'facebook.png',  placeholder: 'facebook.com/yourpage' },
+    { id: 'instagram', label: 'Instagram', file: 'instagram.png', placeholder: 'instagram.com/yourname' },
+    { id: 'linkedin',  label: 'LinkedIn',  file: 'linkedin.png',  placeholder: 'linkedin.com/in/yourname' },
+    { id: 'x',         label: 'X',         file: 'x.png',         placeholder: 'x.com/yourname' },
+    { id: 'youtube',   label: 'YouTube',   file: 'youtube.png',   placeholder: 'youtube.com/@yourchannel' },
+    { id: 'tiktok',    label: 'TikTok',    file: 'tiktok.png',    placeholder: 'tiktok.com/@yourname' },
+    { id: 'website',   label: 'Website',   file: 'website.png',   placeholder: 'yoursite.com' }
+  ];
+  const COLOURS = [
+    { v: '#1f2a3a', name: 'Ink navy' },
+    { v: '#00843d', name: 'Postbox green' },
+    { v: '#8a1c1c', name: 'Brick red' },
+    { v: '#005f9e', name: 'Atlantic blue' },
+    { v: '#5b3a8a', name: 'Heather purple' },
+    { v: '#444444', name: 'Slate grey' }
+  ];
+  const STORAGE_KEY = 'sign-off-v4';
+  const MAX_EMBED_PX = 240;
+
+  const $ = (id) => document.getElementById(id);
+  const form = $('form'), status = $('status'), preview = $('preview'), htmlBox = $('html'), plainBox = $('plain');
+  let embeddedImage = '', embeddedName = '';
+
+  // Build colour swatches
+  const colWrap = $('colours');
+  COLOURS.forEach((c, i) => {
+    const l = document.createElement('label');
+    l.className = 'sw'; l.dataset.name = c.name;
+    l.innerHTML =
+      '<input type="radio" name="colour" value="' + c.v + '" data-key="colour"' + (i === 0 ? ' checked' : '') + '>' +
+      '<span class="dot" style="background:' + c.v + '" aria-hidden="true"></span>' +
+      '<span class="txt"><span class="nm">' + c.name + '</span><span class="hex" aria-hidden="true">' + c.v.toUpperCase() + '</span></span>' +
+      '<span class="tick" aria-hidden="true"></span>';
+    colWrap.appendChild(l);
+  });
+
+  // Build platform controls
+  const socialsWrap = $('socials');
+  PLATFORMS.forEach(p => {
+    const div = document.createElement('div');
+    div.innerHTML =
+      '<label class="srow"><input type="checkbox" id="on_' + p.id + '" data-key="on_' + p.id + '"><span class="t">' + p.label + '</span></label>' +
+      '<div class="sub" id="sub_' + p.id + '" hidden>' +
+        '<label for="url_' + p.id + '">' + p.label + ' link</label>' +
+        '<input id="url_' + p.id + '" type="url" data-key="url_' + p.id + '" placeholder="' + p.placeholder + '"></div>';
+    while (div.firstChild) socialsWrap.appendChild(div.firstChild);
+  });
+
+  // ---------- one VoiceOver stop per choice ----------
+  // Labels that wrap rich content around a hidden radio get read twice by iOS VoiceOver
+  // (the card, then the text inside). Give the input the full spoken name and hide the visuals.
+  function flattenChoice(label) {
+    const input = label.querySelector('input');
+    if (!input) return;
+    const text = label.textContent.replace(/\s+/g, ' ').trim();
+    if (text && !input.hasAttribute('aria-label')) input.setAttribute('aria-label', text);
+    input.removeAttribute('aria-describedby'); // the name now carries the hint; avoid hearing it twice
+    Array.from(label.children).forEach(ch => { if (ch !== input) ch.setAttribute('aria-hidden', 'true'); });
+  }
+  function flattenAll() {
+    document.querySelectorAll('label.card, label.sw, .seg label, label.opt, label.srow').forEach(flattenChoice);
+  }
+
+  // ---------- helpers ----------
+  const esc = s => String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const normUrl = u => { u = (u || '').trim(); if (!u) return ''; return /^(https?:|mailto:|tel:)/i.test(u) ? u : 'https://' + u; };
+  const prettyUrl = u => (u || '').trim().replace(/^https?:\/\//i, '').replace(/\/$/, '');
+  const telHref = p => 'tel:' + (p || '').replace(/[^\d+]/g, '');
+
+  function readState() {
+    const s = {};
+    form.querySelectorAll('[data-key]').forEach(el => {
+      const k = el.dataset.key;
+      if (el.type === 'checkbox') s[k] = el.checked;
+      else if (el.type === 'radio') { if (el.checked) s[k] = el.value; }
+      else s[k] = el.value;
+    });
+    return s;
+  }
+  function applyState(s) {
+    form.querySelectorAll('[data-key]').forEach(el => {
+      const k = el.dataset.key; if (!(k in s)) return;
+      if (el.type === 'checkbox') el.checked = !!s[k];
+      else if (el.type === 'radio') el.checked = (el.value === s[k]);
+      else el.value = s[k];
+    });
+  }
+  function accent(s) {
+    const c = (s.customColour || '').trim();
+    if (/^#?[0-9a-f]{6}$/i.test(c)) return c.startsWith('#') ? c : '#' + c;
+    return s.colour || '#1f2a3a';
+  }
+  function imageSrc(s) {
+    if (s.imageMode === 'embed') return embeddedImage;
+    if (s.imageMode === 'link') return (s.imageUrl || '').trim();
+    return '';
+  }
+  function activeSocials(s) {
+    const base = ((s.iconBase || '').trim() || DEFAULT_ICON_BASE).replace(/\/$/, '');
+    return PLATFORMS.filter(p => s['on_' + p.id] && (s['url_' + p.id] || '').trim())
+      .map(p => ({ label: p.label, href: normUrl(s['url_' + p.id]), icon: base + '/' + p.file }));
+  }
+
+  // ---------- signature HTML ----------
+  function build(s) {
+    const col = accent(s), font = s.font, grey = '#555555';
+    const base = 'font-family:' + font + ';font-size:14px;line-height:20px;color:#222222;';
+    const link = 'color:' + col + ';text-decoration:none;';
+    const socials = activeSocials(s);
+    const src = imageSrc(s);
+    const size = parseInt(s.imageSize, 10) || 90;
+    const round = s.imageShape === 'round';
+    const sep = ' <span style="color:#999999;">|</span> ';
+    const table = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">';
+
+    function socialRow() {
+      if (!socials.length) return '';
+      if (s.socialStyle === 'icons') {
+        const isz = parseInt(s.iconSize, 10) || 24;
+        return '<tr><td style="padding-top:10px;">' + socials.map(x =>
+          '<a href="' + esc(x.href) + '" style="text-decoration:none;display:inline-block;margin-right:8px;">' +
+          '<img src="' + esc(x.icon) + '" width="' + isz + '" height="' + isz + '" alt="' + esc(x.label) + '" style="display:block;border:0;width:' + isz + 'px;height:' + isz + 'px;"></a>'
+        ).join('') + '</td></tr>';
+      }
+      return '<tr><td style="padding-top:8px;' + base + 'font-size:13px;">' + socials.map(x =>
+        '<a href="' + esc(x.href) + '" style="' + link + '">' + esc(x.label) + '</a>').join(sep) + '</td></tr>';
+    }
+    function nameBlock() {
+      let h = '<tr><td style="' + base + 'font-size:17px;line-height:22px;font-weight:bold;color:' + col + ';">' + esc(s.name) + '</td></tr>';
+      const tc = [s.title, s.company].filter(Boolean).map(esc).join(sep);
+      if (tc) h += '<tr><td style="' + base + 'color:' + grey + ';">' + tc + '</td></tr>';
+      if (s.tagline) h += '<tr><td style="' + base + 'font-style:italic;color:' + grey + ';">' + esc(s.tagline) + '</td></tr>';
+      return h;
+    }
+    function contactLines() {
+      let h = '';
+      if (s.phone) h += '<tr><td style="' + base + '"><a href="' + esc(telHref(s.phone)) + '" style="' + link + '">' + esc(s.phone) + '</a></td></tr>';
+      if (s.email) h += '<tr><td style="' + base + '"><a href="mailto:' + esc(s.email) + '" style="' + link + '">' + esc(s.email) + '</a></td></tr>';
+      if (s.website) h += '<tr><td style="' + base + '"><a href="' + esc(normUrl(s.website)) + '" style="' + link + '">' + esc(prettyUrl(s.website)) + '</a></td></tr>';
+      if (s.address) h += '<tr><td style="' + base + 'color:' + grey + ';">' + esc(s.address) + '</td></tr>';
+      return h;
+    }
+    function image(px) {
+      if (!src) return '';
+      const r = round ? 'border-radius:50%;' : '';
+      return '<img src="' + esc(src) + '" width="' + px + '" height="' + px + '" alt="' + esc(s.imageAlt || '') + '" style="display:block;border:0;width:' + px + 'px;height:' + px + 'px;object-fit:cover;' + r + '">';
+    }
+
+    if (s.layout === 'sidebar') {
+      const left = src ? '<td style="vertical-align:top;padding-right:16px;">' + image(size) + '</td>' : '';
+      return table + '<tr>' + left +
+        '<td style="vertical-align:top;border-left:3px solid ' + col + ';padding-left:14px;">' +
+          table + nameBlock() + '<tr><td style="padding-top:6px;"></td></tr>' + contactLines() + socialRow() + '</table>' +
+        '</td></tr></table>';
+    }
+    if (s.layout === 'compact') {
+      const line1 = [s.name ? '<strong style="color:' + col + ';">' + esc(s.name) + '</strong>' : '', esc(s.title), esc(s.company)].filter(Boolean).join(sep);
+      const parts = [];
+      if (s.phone) parts.push('<a href="' + esc(telHref(s.phone)) + '" style="' + link + '">' + esc(s.phone) + '</a>');
+      if (s.email) parts.push('<a href="mailto:' + esc(s.email) + '" style="' + link + '">' + esc(s.email) + '</a>');
+      if (s.website) parts.push('<a href="' + esc(normUrl(s.website)) + '" style="' + link + '">' + esc(prettyUrl(s.website)) + '</a>');
+      let h = table;
+      if (src) h += '<tr><td style="padding-bottom:8px;">' + image(Math.min(size, 64)) + '</td></tr>';
+      h += '<tr><td style="' + base + '">' + line1 + '</td></tr>';
+      if (parts.length) h += '<tr><td style="' + base + 'font-size:13px;">' + parts.join(sep) + '</td></tr>';
+      if (s.tagline) h += '<tr><td style="' + base + 'font-size:13px;font-style:italic;color:' + grey + ';">' + esc(s.tagline) + '</td></tr>';
+      return h + socialRow() + '</table>';
+    }
+    let h = table;
+    if (src) h += '<tr><td style="padding-bottom:10px;">' + image(size) + '</td></tr>';
+    h += nameBlock();
+    h += '<tr><td style="padding:8px 0 6px;"><div style="width:48px;height:2px;background:' + col + ';font-size:0;line-height:0;">&nbsp;</div></td></tr>';
+    return h + contactLines() + socialRow() + '</table>';
+  }
+
+  function buildPlain(s) {
+    const lines = [];
+    if (s.name) lines.push(s.name);
+    const tc = [s.title, s.company].filter(Boolean).join(' | ');
+    if (tc) lines.push(tc);
+    if (s.tagline) lines.push(s.tagline);
+    if (s.phone || s.email || s.website || s.address) lines.push('');
+    if (s.phone) lines.push(s.phone);
+    if (s.email) lines.push(s.email);
+    if (s.website) lines.push(prettyUrl(s.website));
+    if (s.address) lines.push(s.address);
+    const soc = activeSocials(s);
+    if (soc.length) { lines.push(''); soc.forEach(x => lines.push(x.label + ': ' + prettyUrl(x.href))); }
+    return lines.join('\n');
+  }
+
+  function describe(s) {
+    if (!s.name && !s.email && !s.phone) return 'The signature is empty so far. Start with your name.';
+    const col = accent(s);
+    const found = Array.from(document.querySelectorAll('#colours .sw')).find(l => l.querySelector('input').value.toLowerCase() === col.toLowerCase());
+    const cName = (found ? found.dataset.name : 'the custom colour ' + col).toLowerCase();
+    const fontName = $('font').selectedOptions[0].textContent.split(' (')[0];
+    const soc = activeSocials(s);
+    const src = imageSrc(s);
+    const imgWord = s.imageAlt || 'image';
+    const round = s.imageShape === 'round';
+    const layouts = {
+      classic: 'The Classic layout stacks everything in one column with a short ' + cName + ' rule under your name.',
+      sidebar: 'The Sidebar layout puts ' + (src ? 'your ' + imgWord + ' on the left and ' : '') + 'a thin vertical ' + cName + ' line beside your details.',
+      compact: 'The Compact layout keeps everything to two tight lines.'
+    };
+    const parts = [layouts[s.layout] || layouts.classic];
+    if (src && s.layout !== 'sidebar') parts.push('Your ' + imgWord + ' sits at the top' + (round ? ', cropped to a circle' : '') + '.');
+    if (s.imageMode === 'embed' && !src) parts.push('You chose to use an image from your device but have not picked one yet.');
+    if (s.imageMode === 'link' && !src) parts.push('You chose an image web address but the box is empty.');
+    parts.push('Your name' + (s.name ? ', ' + s.name + ',' : '') + ' is in bold ' + cName + ' ' + fontName + '.');
+    const tc = [s.title, s.company].filter(Boolean).join(' and ');
+    if (tc) parts.push('Underneath in grey: ' + tc + '.');
+    if (s.tagline) parts.push('Then the tagline in italics: ' + s.tagline + '.');
+    const contacts = [s.phone && 'phone', s.email && 'email', s.website && 'website', s.address && 'address'].filter(Boolean);
+    if (contacts.length) parts.push('Contact details follow as clickable ' + cName + ' links: ' + contacts.join(', ') + '.');
+    if (soc.length) parts.push('At the bottom, ' + soc.length + ' social link' + (soc.length > 1 ? 's' : '') + ' as ' + (s.socialStyle === 'icons' ? 'clickable icons' : 'text links') + ': ' + soc.map(x => x.label).join(', ') + '.');
+    if (!s.name) parts.push('You have not entered a name yet.');
+    return parts.join(' ');
+  }
+
+  // ---------- image picking ----------
+  function fmtKB(bytes) { return Math.round(bytes / 1024) + ' KB'; }
+  function showEmbedUI() {
+    const has = !!embeddedImage;
+    $('btnChoose').hidden = has;
+    $('thumbWrap').hidden = !has;
+    $('imageActions').hidden = !has;
+  }
+  function pickFile(file) {
+    if (!file || !file.type.startsWith('image/')) { say('That file is not an image. Choose a PNG or JPEG.'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, MAX_EMBED_PX / Math.max(img.width, img.height));
+        const w = Math.max(1, Math.round(img.width * scale)), h = Math.max(1, Math.round(img.height * scale));
+        const c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        const keepPng = /png|gif|svg/.test(file.type);
+        embeddedImage = keepPng ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.85);
+        embeddedName = file.name;
+        const kb = fmtKB(embeddedImage.length * 0.75);
+        $('thumb').src = embeddedImage;
+        $('thumbName').textContent = file.name;
+        $('thumbSize').textContent = w + ' by ' + h + ' pixels, about ' + kb;
+        showEmbedUI();
+        if (!$('imageAlt').value) $('imageAlt').focus();
+        try { localStorage.setItem(STORAGE_KEY + '-img', JSON.stringify({ data: embeddedImage, name: file.name, w: w, h: h, kb: kb })); } catch (e) {}
+        render();
+        say('Image added: ' + file.name + '. Now give it a short description so screen reader users know what it is.');
+      };
+      img.onerror = () => say('That image could not be read. Try a PNG or JPEG.');
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+  $('fileInput').addEventListener('change', e => { if (e.target.files[0]) pickFile(e.target.files[0]); });
+  $('btnChoose').addEventListener('click', () => $('fileInput').click());
+  $('btnReplace').addEventListener('click', () => $('fileInput').click());
+  $('btnRemoveImage').addEventListener('click', () => {
+    embeddedImage = ''; embeddedName = ''; $('fileInput').value = '';
+    showEmbedUI();
+    try { localStorage.removeItem(STORAGE_KEY + '-img'); } catch (e) {}
+    render(); say('Image removed.'); $('btnChoose').focus();
+  });
+
+  // ---------- validation ----------
+  function validate(el) {
+    const v = el.value.trim(); let msg = '';
+    if (v) {
+      if (el.id === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) msg = 'Enter an email like name@example.com.';
+      if (el.id === 'website' && !/\.[a-z]{2,}/i.test(v)) msg = 'Enter a web address like example.com.';
+      if (el.id === 'customColour' && !/^#?[0-9a-f]{6}$/i.test(v)) msg = 'Use a six-digit code like #ff6600.';
+    }
+    const errEl = $('err_' + el.id);
+    if (errEl) errEl.textContent = msg;
+    el.setAttribute('aria-invalid', msg ? 'true' : 'false');
+    return !msg;
+  }
+  ['email', 'website', 'customColour'].forEach(id => {
+    $(id).addEventListener('blur', e => validate(e.target));
+    $(id).addEventListener('input', e => { if (e.target.getAttribute('aria-invalid') === 'true') validate(e.target); });
+  });
+
+  // ---------- preview width ----------
+  Array.from(document.querySelectorAll('input[name="pw"]')).forEach(r => {
+    r.addEventListener('change', () => { $('emailSurface').classList.toggle('is-mobile', r.value === 'mobile' && r.checked); });
+  });
+
+  // ---------- render ----------
+  let lastHtml = '';
+  function render() {
+    const s = readState();
+    $('embedPanel').hidden = s.imageMode !== 'embed';
+    $('linkPanel').hidden = s.imageMode !== 'link';
+    $('imageOptions').hidden = s.imageMode === 'none';
+    if (s.imageMode === 'embed') showEmbedUI();
+    PLATFORMS.forEach(p => { $('sub_' + p.id).hidden = !s['on_' + p.id]; });
+    const html = build(s), plain = buildPlain(s);
+    if (html !== lastHtml) { lastHtml = html; preview.innerHTML = html; htmlBox.value = html; }
+    if (plain !== plainBox.value) plainBox.value = plain;
+    save(s);
+  }
+  function save(s) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s || readState())); } catch (e) {} }
+  function say(msg) { status.textContent = ''; setTimeout(() => { status.textContent = msg; }, 50); }
+
+  // ---------- copy ----------
+  async function copyRich() {
+    const s = readState(), html = lastHtml, text = buildPlain(s);
+    const after = s.imageMode === 'embed' && embeddedImage ? ' Note: your embedded image will not show for people reading in Gmail.' : '';
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({
+          'text/html': new Blob([html], { type: 'text/html' }),
+          'text/plain': new Blob([text], { type: 'text/plain' })
+        })]);
+        copied(after); return;
+      }
+      throw new Error('no ClipboardItem');
+    } catch (e) {
+      try {
+        const range = document.createRange(); range.selectNodeContents(preview);
+        const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        const ok = document.execCommand('copy'); sel.removeAllRanges();
+        if (ok) copied(after); else say('Copying failed. Open "For the technically minded" and copy the HTML there.');
+      } catch (e2) { say('Copying failed. Open "For the technically minded" and copy the HTML there.'); }
+    }
+  }
+  let copiedTimer = null;
+  function copied(after) {
+    const b = $('btnCopyRich');
+    b.classList.add('done'); b.textContent = 'Signature copied';
+    say('Signature copied. Paste it into your email app\'s signature box.' + after);
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => { b.classList.remove('done'); b.textContent = 'Copy signature'; }, 3000);
+  }
+  async function copyText(value, label) {
+    try { await navigator.clipboard.writeText(value); say(label + ' copied.'); }
+    catch (e) { say('Copying failed. Select the text in the box and copy it yourself.'); }
+  }
+
+  // ---------- events ----------
+  // Typing only saves; the preview and code rebuild when a field is finished (change) or a
+  // radio/checkbox toggles. Rebuilding the preview on every keystroke made VoiceOver jump.
+  form.addEventListener('input', e => { if (e.target.type === 'radio' || e.target.type === 'checkbox') return; save(); });
+  form.addEventListener('change', render);
+  $('btnCopyRich').addEventListener('click', copyRich);
+  $('btnCopyHtml').addEventListener('click', () => copyText(htmlBox.value, 'HTML code'));
+  $('btnCopyText').addEventListener('click', () => copyText(plainBox.value, 'Plain text signature'));
+  $('btnDescribe').addEventListener('click', () => say(describe(readState())));
+  $('btnClear').addEventListener('click', () => {
+    if (!confirm('Clear all your details and start again?')) return;
+    form.reset(); embeddedImage = ''; embeddedName = '';
+    showEmbedUI();
+    ['email', 'website', 'customColour'].forEach(id => { $(id).setAttribute('aria-invalid', 'false'); const er = $('err_' + id); if (er) er.textContent = ''; });
+    try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_KEY + '-img'); } catch (e) {}
+    $('moreMenu').removeAttribute('open'); render(); say('Everything cleared.'); $('name').focus();
+  });
+
+  // ---------- start ----------
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) applyState(JSON.parse(saved));
+    const img = localStorage.getItem(STORAGE_KEY + '-img');
+    if (img) { const o = JSON.parse(img); embeddedImage = o.data; embeddedName = o.name;
+      $('thumb').src = o.data; $('thumbName').textContent = o.name;
+      $('thumbSize').textContent = (o.w && o.h ? o.w + ' by ' + o.h + ' pixels, about ' + o.kb : ''); }
+  } catch (e) {}
+  showEmbedUI();
+  flattenAll();
+  render();
+})();
+
+</script>
+</body>
+</html>
