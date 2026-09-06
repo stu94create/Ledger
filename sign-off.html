@@ -632,7 +632,7 @@
     let h = table;
     if (src) h += '<tr><td style="padding-bottom:10px;">' + image(size) + '</td></tr>';
     h += nameBlock();
-    h += '<tr><td style="padding:8px 0 6px;"><div style="width:48px;height:2px;background:' + col + ';font-size:0;line-height:0;">&nbsp;</div></td></tr>';
+    h += '<tr><td style="padding:8px 0 6px;">' + table + '<tr><td width="48" height="2" bgcolor="' + col + '" style="width:48px;height:2px;background:' + col + ';font-size:1px;line-height:2px;">&nbsp;</td></tr></table></td></tr>';
     return h + contactLines() + socialRow() + '</table>';
   }
 
