@@ -82,6 +82,13 @@
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
   @media (max-width: 30rem) { .row { grid-template-columns: 1fr; } }
 
+  .mline { display: flex; gap: .5rem; align-items: stretch; }
+  .mline input:first-child { flex: 1; min-width: 0; }
+  .mline .mlabel { flex: 0 0 6.5rem; }
+  .mline .mremove { flex: none; align-self: center; }
+  .multi .madd { margin-top: .6rem; }
+  .multi .hint { display: none; }
+  .multi.show-hint .hint { display: block; }
   fieldset { border: 0; padding: 0; margin: 1rem 0 0; min-width: 0; }
   legend { font-weight: 600; padding: 0; margin-bottom: .5rem; }
 
@@ -228,18 +235,79 @@
           <div><label for="title">Job title</label><input id="title" type="text" data-key="title" autocomplete="organization-title"></div>
           <div><label for="company">Company or organisation</label><input id="company" type="text" data-key="company" autocomplete="organization"></div>
         </div>
-        <div class="row">
-          <div><label for="phone">Phone</label><input id="phone" type="tel" data-key="phone" autocomplete="tel"></div>
-          <div>
+        <div class="multi" id="phoneGroup">
+          <input type="hidden" id="phoneCount" data-key="phoneCount" value="1">
+          <div class="mrow" id="phoneRow1">
+            <label for="phone">Phone</label>
+            <div class="mline">
+              <input id="phone" type="tel" data-key="phone" autocomplete="tel">
+              <input id="phoneL1" type="text" class="mlabel" data-key="phoneL1" placeholder="e.g. Mobile" aria-label="Short label for this phone. Type anything you like, for example Mobile, Office or WhatsApp" hidden>
+
+            </div>
+
+          </div>
+          <div class="mrow" id="phoneRow2" hidden>
+            <label for="phone2">Second Phone</label>
+            <div class="mline">
+              <input id="phone2" type="tel" data-key="phone2">
+              <input id="phoneL2" type="text" class="mlabel" data-key="phoneL2" placeholder="e.g. Mobile" aria-label="Short label for this phone. Type anything you like, for example Mobile, Office or WhatsApp" hidden>
+              <button type="button" class="btn-secondary btn-small mremove" data-kind="phone" data-n="2" aria-label="Remove second phone">Remove</button>
+            </div>
+
+          </div>
+          <div class="mrow" id="phoneRow3" hidden>
+            <label for="phone3">Third Phone</label>
+            <div class="mline">
+              <input id="phone3" type="tel" data-key="phone3">
+              <input id="phoneL3" type="text" class="mlabel" data-key="phoneL3" placeholder="e.g. Mobile" aria-label="Short label for this phone. Type anything you like, for example Mobile, Office or WhatsApp" hidden>
+              <button type="button" class="btn-secondary btn-small mremove" data-kind="phone" data-n="3" aria-label="Remove third phone">Remove</button>
+            </div>
+
+          </div>
+          <button type="button" id="addPhone" class="btn-secondary btn-small madd" data-kind="phone" aria-describedby="hint_addphone">Add another phone</button>
+          <span class="hint" id="hint_addphone">Type your own short label beside each number, such as Mobile, Office or WhatsApp. Two is plenty. Three starts to look indecisive.</span>
+        </div>
+        <div class="multi" id="emailGroup">
+          <input type="hidden" id="emailCount" data-key="emailCount" value="1">
+          <div class="mrow" id="emailRow1">
             <label for="email">Email</label>
-            <input id="email" type="email" data-key="email" autocomplete="email" aria-describedby="err_email">
+            <div class="mline">
+              <input id="email" type="email" data-key="email" autocomplete="email" aria-describedby="err_email">
+              <input id="emailL1" type="text" class="mlabel" data-key="emailL1" placeholder="e.g. Work" aria-label="Short label for this email. Type anything you like, for example Work, Personal or Bookings" hidden>
+
+            </div>
             <span class="err" id="err_email" role="alert"></span>
           </div>
+          <div class="mrow" id="emailRow2" hidden>
+            <label for="email2">Second Email</label>
+            <div class="mline">
+              <input id="email2" type="email" data-key="email2" aria-describedby="err_email2">
+              <input id="emailL2" type="text" class="mlabel" data-key="emailL2" placeholder="e.g. Work" aria-label="Short label for this email. Type anything you like, for example Work, Personal or Bookings" hidden>
+              <button type="button" class="btn-secondary btn-small mremove" data-kind="email" data-n="2" aria-label="Remove second email">Remove</button>
+            </div>
+            <span class="err" id="err_email2" role="alert"></span>
+          </div>
+          <div class="mrow" id="emailRow3" hidden>
+            <label for="email3">Third Email</label>
+            <div class="mline">
+              <input id="email3" type="email" data-key="email3" aria-describedby="err_email3">
+              <input id="emailL3" type="text" class="mlabel" data-key="emailL3" placeholder="e.g. Work" aria-label="Short label for this email. Type anything you like, for example Work, Personal or Bookings" hidden>
+              <button type="button" class="btn-secondary btn-small mremove" data-kind="email" data-n="3" aria-label="Remove third email">Remove</button>
+            </div>
+            <span class="err" id="err_email3" role="alert"></span>
+          </div>
+          <button type="button" id="addEmail" class="btn-secondary btn-small madd" data-kind="email" aria-describedby="hint_addemail">Add another email</button>
+          <span class="hint" id="hint_addemail">Type your own short label beside each address, such as Work, Personal or Bookings. Two is plenty. Three starts to look indecisive.</span>
         </div>
         <label for="website">Website</label>
         <input id="website" type="url" data-key="website" autocomplete="url" aria-describedby="hint_website err_website">
         <span class="hint" id="hint_website">You can leave off the https://</span>
         <span class="err" id="err_website" role="alert"></span>
+
+        <div class="actions" style="margin-bottom:0">
+          <button type="button" id="btnFixCaps" class="btn-secondary btn-small" aria-describedby="hint_fixcaps">Fix capitals</button>
+        </div>
+        <span class="hint" id="hint_fixcaps">Tidies names and companies dictated in the wrong case, and makes web and email addresses lower-case.</span>
 
         <details class="inline">
           <summary>More details: tagline and address <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
@@ -383,6 +451,51 @@
           </div>
         </div>
 
+        <details class="inline">
+          <summary>Banner image <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <p class="hint" style="margin-top:.4rem">A wide picture attached to your signature, such as show artwork or a promo strip. Best on a main signature rather than one used for replies.</p>
+          <fieldset>
+            <legend>Where is your banner?</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="bannerMode" value="none" data-key="bannerMode" checked><span>No banner</span></label>
+              <label class="opt"><input type="radio" name="bannerMode" value="link" data-key="bannerMode"><span>At a web address<span class="hint">Works everywhere. Recommended for banners.</span></span></label>
+              <label class="opt"><input type="radio" name="bannerMode" value="embed" data-key="bannerMode"><span>On my phone or computer<span class="hint">Built into the signature. Banners are large, so this suits Apple Mail and Outlook; Gmail readers won't see it.</span></span></label>
+            </div>
+          </fieldset>
+          <div id="bannerEmbedPanel" hidden>
+            <button type="button" class="drop" id="btnBannerChoose" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m0 0L7 9m5-5l5 5"/><path d="M4 15v4a1 1 0 001 1h14a1 1 0 001-1v-4"/></svg>
+              <span>Add banner</span><span class="small">Wide and short works best, about 3 to 1</span>
+            </button>
+            <div class="thumbwrap" id="bannerThumbWrap" hidden>
+              <img id="bannerThumb" alt=""><div class="meta"><b id="bannerThumbName">banner</b><span id="bannerThumbSize"></span></div>
+            </div>
+            <div class="actions" id="bannerActions" hidden>
+              <button type="button" id="btnBannerReplace" class="btn-secondary btn-small">Replace</button>
+              <button type="button" id="btnBannerRemove" class="btn-secondary btn-small">Remove</button>
+            </div>
+            <input type="file" id="bannerFileInput" accept="image/*" class="sr-only" tabindex="-1" aria-hidden="true">
+          </div>
+          <div id="bannerLinkPanel" hidden>
+            <label for="bannerUrl">Banner web address</label>
+            <input id="bannerUrl" type="url" data-key="bannerUrl" aria-describedby="hint_burl">
+            <span class="hint" id="hint_burl">A direct link to the picture itself, ending in .png or .jpg.</span>
+          </div>
+          <div id="bannerOptions" hidden>
+            <label for="bannerAlt">Banner description</label>
+            <input id="bannerAlt" type="text" data-key="bannerAlt" aria-describedby="hint_balt">
+            <span class="hint" id="hint_balt">Say what's on it, including any words, for example "What's Up Docs. New episodes monthly".</span>
+            <label for="bannerLink">Where tapping the banner goes</label>
+            <input id="bannerLink" type="url" data-key="bannerLink" aria-describedby="hint_blink">
+            <span class="hint" id="hint_blink">Leave blank to use your website.</span>
+            <label for="bannerPos">Position</label>
+            <select id="bannerPos" data-key="bannerPos">
+              <option value="below" selected>Below the signature</option>
+              <option value="above">Above the signature</option>
+            </select>
+          </div>
+        </details>
+
         <fieldset>
           <legend>Social links</legend>
           <div class="seg" role="radiogroup" aria-label="Show social links as">
@@ -483,6 +596,8 @@
   const $ = (id) => document.getElementById(id);
   const form = $('form'), status = $('status'), preview = $('preview'), htmlBox = $('html'), plainBox = $('plain');
   let embeddedImage = '', embeddedName = '';
+  let bannerImage = '', bannerName = '';
+  const MAX_BANNER_PX = 640;   // embedded banners are resized to this width
 
   // Build colour swatches
   const colWrap = $('colours');
@@ -529,6 +644,16 @@
   const normUrl = u => { u = (u || '').trim(); if (!u) return ''; return /^(https?:|mailto:|tel:)/i.test(u) ? u : 'https://' + u; };
   const prettyUrl = u => (u || '').trim().replace(/^https?:\/\//i, '').replace(/\/$/, '');
   const telHref = p => 'tel:' + (p || '').replace(/[^\d+]/g, '');
+  // Gather up to three phones/emails with their optional labels
+  function multi(s, kind) {
+    const n = Math.max(1, Math.min(3, parseInt(s[kind + 'Count'], 10) || 1));
+    const out = [];
+    for (let i = 1; i <= n; i++) {
+      const v = (s[i === 1 ? kind : kind + i] || '').trim();
+      if (v) out.push({ v: v, l: n > 1 ? (s[kind + 'L' + i] || '').trim() : '' });
+    }
+    return out;
+  }
 
   function readState() {
     const s = {};
@@ -557,6 +682,26 @@
     if (s.imageMode === 'embed') return embeddedImage;
     if (s.imageMode === 'link') return (s.imageUrl || '').trim();
     return '';
+  }
+  function bannerSrc(s) {
+    if (s.bannerMode === 'embed') return bannerImage;
+    if (s.bannerMode === 'link') return (s.bannerUrl || '').trim();
+    return '';
+  }
+  function bannerHtml(s) {
+    const src = bannerSrc(s);
+    if (!src) return '';
+    const href = normUrl((s.bannerLink || '').trim() || s.website);
+    const img = '<img src="' + esc(src) + '" width="320" alt="' + esc(s.bannerAlt || '') + '" style="display:block;border:0;width:100%;max-width:320px;height:auto;">';
+    return href ? '<a href="' + esc(href) + '" style="text-decoration:none;display:block;max-width:320px;">' + img + '</a>' : img;
+  }
+  function withBanner(s, core) {
+    const b = bannerHtml(s);
+    if (!b) return core;
+    const table = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">';
+    const bannerRow = '<tr><td style="' + (s.bannerPos === 'above' ? 'padding-bottom:12px;' : 'padding-top:14px;') + '">' + b + '</td></tr>';
+    const coreRow = '<tr><td>' + core + '</td></tr>';
+    return table + (s.bannerPos === 'above' ? bannerRow + coreRow : coreRow + bannerRow) + '</table>';
   }
   function activeSocials(s) {
     const base = ((s.iconBase || '').trim() || DEFAULT_ICON_BASE).replace(/\/$/, '');
@@ -597,8 +742,9 @@
     }
     function contactLines() {
       let h = '';
-      if (s.phone) h += '<tr><td style="' + base + '"><a href="' + esc(telHref(s.phone)) + '" style="' + link + '">' + esc(s.phone) + '</a></td></tr>';
-      if (s.email) h += '<tr><td style="' + base + '"><a href="mailto:' + esc(s.email) + '" style="' + link + '">' + esc(s.email) + '</a></td></tr>';
+      const lab = x => x.l ? '<span style="color:#777777;">' + esc(x.l) + '&nbsp;</span>' : '';
+      multi(s, 'phone').forEach(x => { h += '<tr><td style="' + base + '">' + lab(x) + '<a href="' + esc(telHref(x.v)) + '" style="' + link + '">' + esc(x.v) + '</a></td></tr>'; });
+      multi(s, 'email').forEach(x => { h += '<tr><td style="' + base + '">' + lab(x) + '<a href="mailto:' + esc(x.v) + '" style="' + link + '">' + esc(x.v) + '</a></td></tr>'; });
       if (s.website) h += '<tr><td style="' + base + '"><a href="' + esc(normUrl(s.website)) + '" style="' + link + '">' + esc(prettyUrl(s.website)) + '</a></td></tr>';
       if (s.address) h += '<tr><td style="' + base + 'color:' + grey + ';">' + esc(s.address) + '</td></tr>';
       return h;
@@ -611,29 +757,30 @@
 
     if (s.layout === 'sidebar') {
       const left = src ? '<td style="vertical-align:top;padding-right:16px;">' + image(size) + '</td>' : '';
-      return table + '<tr>' + left +
+      return withBanner(s, table + '<tr>' + left +
         '<td style="vertical-align:top;border-left:3px solid ' + col + ';padding-left:14px;">' +
           table + nameBlock() + '<tr><td style="padding-top:6px;"></td></tr>' + contactLines() + socialRow() + '</table>' +
-        '</td></tr></table>';
+        '</td></tr></table>');
     }
     if (s.layout === 'compact') {
       const line1 = [s.name ? '<strong style="color:' + col + ';">' + esc(s.name) + '</strong>' : '', esc(s.title), esc(s.company)].filter(Boolean).join(sep);
       const parts = [];
-      if (s.phone) parts.push('<a href="' + esc(telHref(s.phone)) + '" style="' + link + '">' + esc(s.phone) + '</a>');
-      if (s.email) parts.push('<a href="mailto:' + esc(s.email) + '" style="' + link + '">' + esc(s.email) + '</a>');
+      const lab = x => x.l ? '<span style="color:#777777;">' + esc(x.l) + '&nbsp;</span>' : '';
+      multi(s, 'phone').forEach(x => parts.push(lab(x) + '<a href="' + esc(telHref(x.v)) + '" style="' + link + '">' + esc(x.v) + '</a>'));
+      multi(s, 'email').forEach(x => parts.push(lab(x) + '<a href="mailto:' + esc(x.v) + '" style="' + link + '">' + esc(x.v) + '</a>'));
       if (s.website) parts.push('<a href="' + esc(normUrl(s.website)) + '" style="' + link + '">' + esc(prettyUrl(s.website)) + '</a>');
       let h = table;
       if (src) h += '<tr><td style="padding-bottom:8px;">' + image(Math.min(size, 64)) + '</td></tr>';
       h += '<tr><td style="' + base + '">' + line1 + '</td></tr>';
       if (parts.length) h += '<tr><td style="' + base + 'font-size:13px;">' + parts.join(sep) + '</td></tr>';
       if (s.tagline) h += '<tr><td style="' + base + 'font-size:13px;font-style:italic;color:' + grey + ';">' + esc(s.tagline) + '</td></tr>';
-      return h + socialRow() + '</table>';
+      return withBanner(s, h + socialRow() + '</table>');
     }
     let h = table;
     if (src) h += '<tr><td style="padding-bottom:10px;">' + image(size) + '</td></tr>';
     h += nameBlock();
     h += '<tr><td style="padding:8px 0 6px;">' + table + '<tr><td width="48" height="2" bgcolor="' + col + '" style="width:48px;height:2px;background:' + col + ';font-size:1px;line-height:2px;">&nbsp;</td></tr></table></td></tr>';
-    return h + contactLines() + socialRow() + '</table>';
+    return withBanner(s, h + contactLines() + socialRow() + '</table>');
   }
 
   function buildPlain(s) {
@@ -643,17 +790,18 @@
     if (tc) lines.push(tc);
     if (s.tagline) lines.push(s.tagline);
     if (s.phone || s.email || s.website || s.address) lines.push('');
-    if (s.phone) lines.push(s.phone);
-    if (s.email) lines.push(s.email);
+    multi(s, 'phone').forEach(x => lines.push((x.l ? x.l + ': ' : '') + x.v));
+    multi(s, 'email').forEach(x => lines.push((x.l ? x.l + ': ' : '') + x.v));
     if (s.website) lines.push(prettyUrl(s.website));
     if (s.address) lines.push(s.address);
     const soc = activeSocials(s);
     if (soc.length) { lines.push(''); soc.forEach(x => lines.push(x.label + ': ' + prettyUrl(x.href))); }
+    if (bannerSrc(s) && (s.bannerLink || '').trim()) { lines.push(''); lines.push((s.bannerAlt || 'Banner') + ': ' + prettyUrl(s.bannerLink)); }
     return lines.join('\n');
   }
 
   function describe(s) {
-    if (!s.name && !s.email && !s.phone) return 'The signature is empty so far. Start with your name.';
+    if (!s.name && !multi(s, 'email').length && !multi(s, 'phone').length) return 'The signature is empty so far. Start with your name.';
     const col = accent(s);
     const found = Array.from(document.querySelectorAll('#colours .sw')).find(l => l.querySelector('input').value.toLowerCase() === col.toLowerCase());
     const cName = (found ? found.dataset.name : 'the custom colour ' + col).toLowerCase();
@@ -675,9 +823,14 @@
     const tc = [s.title, s.company].filter(Boolean).join(' and ');
     if (tc) parts.push('Underneath in grey: ' + tc + '.');
     if (s.tagline) parts.push('Then the tagline in italics: ' + s.tagline + '.');
-    const contacts = [s.phone && 'phone', s.email && 'email', s.website && 'website', s.address && 'address'].filter(Boolean);
+    const ph = multi(s, 'phone'), em = multi(s, 'email');
+    const named = (arr, one, many) => !arr.length ? '' : arr.length === 1 ? one : arr.length + ' ' + many + (arr.some(x => x.l) ? ' (' + arr.map(x => x.l || 'unlabelled').join(', ') + ')' : '');
+    const contacts = [named(ph, 'phone', 'phone numbers'), named(em, 'email', 'email addresses'), s.website && 'website', s.address && 'address'].filter(Boolean);
     if (contacts.length) parts.push('Contact details follow as clickable ' + cName + ' links: ' + contacts.join(', ') + '.');
     if (soc.length) parts.push('At the bottom, ' + soc.length + ' social link' + (soc.length > 1 ? 's' : '') + ' as ' + (s.socialStyle === 'icons' ? 'clickable icons' : 'text links') + ': ' + soc.map(x => x.label).join(', ') + '.');
+    const bsrc = bannerSrc(s);
+    if (bsrc) parts.push((s.bannerPos === 'above' ? 'Above all of that' : 'Beneath everything') + ' is a full-width banner, ' + (s.bannerAlt ? 'described as "' + s.bannerAlt + '"' : 'with no description yet') + ', which links to ' + prettyUrl((s.bannerLink || '').trim() || s.website || '') + '.');
+    else if (s.bannerMode !== 'none') parts.push('You turned on a banner but have not ' + (s.bannerMode === 'embed' ? 'picked one yet.' : 'entered its web address yet.'));
     if (!s.name) parts.push('You have not entered a name yet.');
     return parts.join(' ');
   }
@@ -686,37 +839,52 @@
   function fmtKB(bytes) { return Math.round(bytes / 1024) + ' KB'; }
   function showEmbedUI() {
     const has = !!embeddedImage;
-    $('btnChoose').hidden = has;
-    $('thumbWrap').hidden = !has;
-    $('imageActions').hidden = !has;
+    $('btnChoose').hidden = has; $('thumbWrap').hidden = !has; $('imageActions').hidden = !has;
+    const hasB = !!bannerImage;
+    $('btnBannerChoose').hidden = hasB; $('bannerThumbWrap').hidden = !hasB; $('bannerActions').hidden = !hasB;
   }
-  function pickFile(file) {
+  // Read, shrink and encode a picked image. maxW/maxH bound the result; cb gets (dataUrl, w, h, kb).
+  function readImage(file, maxW, maxH, cb) {
     if (!file || !file.type.startsWith('image/')) { say('That file is not an image. Choose a PNG or JPEG.'); return; }
     const reader = new FileReader();
     reader.onload = () => {
       const img = new Image();
       img.onload = () => {
-        const scale = Math.min(1, MAX_EMBED_PX / Math.max(img.width, img.height));
+        const scale = Math.min(1, maxW / img.width, maxH / img.height);
         const w = Math.max(1, Math.round(img.width * scale)), h = Math.max(1, Math.round(img.height * scale));
         const c = document.createElement('canvas'); c.width = w; c.height = h;
         c.getContext('2d').drawImage(img, 0, 0, w, h);
         const keepPng = /png|gif|svg/.test(file.type);
-        embeddedImage = keepPng ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.85);
-        embeddedName = file.name;
-        const kb = fmtKB(embeddedImage.length * 0.75);
-        $('thumb').src = embeddedImage;
-        $('thumbName').textContent = file.name;
-        $('thumbSize').textContent = w + ' by ' + h + ' pixels, about ' + kb;
-        showEmbedUI();
-        if (!$('imageAlt').value) $('imageAlt').focus();
-        try { localStorage.setItem(STORAGE_KEY + '-img', JSON.stringify({ data: embeddedImage, name: file.name, w: w, h: h, kb: kb })); } catch (e) {}
-        render();
-        say('Image added: ' + file.name + '. Now give it a short description so screen reader users know what it is.');
+        const data = keepPng ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.85);
+        cb(data, w, h, fmtKB(data.length * 0.75));
       };
       img.onerror = () => say('That image could not be read. Try a PNG or JPEG.');
       img.src = reader.result;
     };
     reader.readAsDataURL(file);
+  }
+  function pickFile(file) {
+    readImage(file, MAX_EMBED_PX, MAX_EMBED_PX, (data, w, h, kb) => {
+      embeddedImage = data; embeddedName = file.name;
+      $('thumb').src = data; $('thumbName').textContent = file.name; $('thumbSize').textContent = w + ' by ' + h + ' pixels, about ' + kb;
+      showEmbedUI();
+      if (!$('imageAlt').value) $('imageAlt').focus();
+      try { localStorage.setItem(STORAGE_KEY + '-img', JSON.stringify({ data: data, name: file.name, w: w, h: h, kb: kb })); } catch (e) {}
+      render();
+      say('Image added: ' + file.name + '. Now give it a short description so screen reader users know what it is.');
+    });
+  }
+  function pickBanner(file) {
+    readImage(file, MAX_BANNER_PX, MAX_BANNER_PX, (data, w, h, kb) => {
+      bannerImage = data; bannerName = file.name;
+      $('bannerThumb').src = data; $('bannerThumbName').textContent = file.name; $('bannerThumbSize').textContent = w + ' by ' + h + ' pixels, about ' + kb;
+      showEmbedUI();
+      if (!$('bannerAlt').value) $('bannerAlt').focus();
+      try { localStorage.setItem(STORAGE_KEY + '-banner', JSON.stringify({ data: data, name: file.name, w: w, h: h, kb: kb })); } catch (e) {}
+      render();
+      const big = parseInt(kb, 10) > 150 ? ' It is about ' + kb + ', which is on the large side for an embedded picture; a web address would be lighter.' : '';
+      say('Banner added: ' + file.name + '. Now describe what is on it, including any words.' + big);
+    });
   }
   $('fileInput').addEventListener('change', e => { if (e.target.files[0]) pickFile(e.target.files[0]); });
   $('btnChoose').addEventListener('click', () => $('fileInput').click());
@@ -727,12 +895,96 @@
     try { localStorage.removeItem(STORAGE_KEY + '-img'); } catch (e) {}
     render(); say('Image removed.'); $('btnChoose').focus();
   });
+  $('bannerFileInput').addEventListener('change', e => { if (e.target.files[0]) pickBanner(e.target.files[0]); });
+  $('btnBannerChoose').addEventListener('click', () => $('bannerFileInput').click());
+  $('btnBannerReplace').addEventListener('click', () => $('bannerFileInput').click());
+  $('btnBannerRemove').addEventListener('click', () => {
+    bannerImage = ''; bannerName = ''; $('bannerFileInput').value = '';
+    showEmbedUI();
+    try { localStorage.removeItem(STORAGE_KEY + '-banner'); } catch (e) {}
+    render(); say('Banner removed.'); $('btnBannerChoose').focus();
+  });
+
+  // ---------- dictation cleanup ----------
+  const SMALL_WORDS = new Set(['a','an','and','at','by','for','from','in','of','on','or','the','to','with']);
+  function titleCase(str, keepSmall) {
+    let first = true;
+    return str.replace(/[A-Za-z\u00C0-\u024F][\w\u00C0-\u024F']*/g, (word) => {
+      const lower = word.toLowerCase();
+      let out;
+      if (!first && keepSmall && SMALL_WORDS.has(lower)) out = lower;
+      else {
+        // Capitalise the first letter and any letter after an apostrophe (O'Brien); keep the rest as typed (McCormack)
+        out = word.charAt(0).toUpperCase() + word.slice(1).replace(/'([a-z])/g, (m, c) => "'" + c.toUpperCase());
+        if (word === lower && lower.startsWith('mc') && lower.length > 3) out = 'Mc' + lower.charAt(2).toUpperCase() + lower.slice(3);
+      }
+      first = false;
+      return out;
+    });
+  }
+  function lowerHost(u) {
+    // Lower-case the scheme and host of a web address, leave the path as typed
+    const m = (u || '').trim().match(/^((?:https?:\/\/)?)([^\/?#]*)(.*)$/i);
+    return m ? m[1].toLowerCase() + m[2].toLowerCase() + m[3] : u;
+  }
+  const URL_FIELDS = () => ['website', 'imageUrl', 'iconBase', 'bannerUrl', 'bannerLink'].concat(PLATFORMS.map(p => 'url_' + p.id));
+  function normaliseCase(el) {
+    if (!el || !el.value) return false;
+    let v = el.value;
+    if (/^email\d?$/.test(el.id)) v = v.trim().toLowerCase();
+    else if (URL_FIELDS().includes(el.id)) v = lowerHost(v);
+    else return false;
+    if (v !== el.value) { el.value = v; return true; }
+    return false;
+  }
+  function fixCapitals() {
+    const changes = [];
+    const targets = [['name', 'Full name', false], ['title', 'Job title', true], ['company', 'Company', true], ['address', 'Address', true],
+      ['phoneL1', 'Phone label', false], ['phoneL2', 'Second phone label', false], ['phoneL3', 'Third phone label', false],
+      ['emailL1', 'Email label', false], ['emailL2', 'Second email label', false], ['emailL3', 'Third email label', false]];
+    targets.forEach(([id, label, keepSmall]) => {
+      const el = $(id); const before = el.value; if (!before.trim()) return;
+      const after = titleCase(before, keepSmall);
+      if (after !== before) { el.value = after; changes.push(label + ' is now ' + after); }
+    });
+    let lowered = [];
+    ['email', 'email2', 'email3'].forEach((id, i) => { if (normaliseCase($(id))) lowered.push(i ? ORD[i + 1] + ' email' : 'email'); });
+    URL_FIELDS().forEach(id => { const el = $(id); if (el && normaliseCase(el)) lowered.push(id === 'website' ? 'website' : id.startsWith('url_') ? id.slice(4) + ' link' : id); });
+    if (lowered.length) changes.push('made ' + lowered.join(', ') + ' lower-case');
+    render();
+    say(changes.length ? 'Fixed capitals: ' + changes.join('; ') + '.' : 'Nothing to fix. Capitals already look right.');
+  }
+  $('btnFixCaps').addEventListener('click', fixCapitals);
+
+  // ---------- add / remove extra phones and emails ----------
+  const ORD = ['', 'first', 'second', 'third'];
+  document.querySelectorAll('.madd').forEach(btn => btn.addEventListener('click', () => {
+    const k = btn.dataset.kind, c = $(k + 'Count');
+    const n = Math.min(3, (parseInt(c.value, 10) || 1) + 1);
+    c.value = String(n); render();
+    const kindWord = k === 'phone' ? 'phone number' : 'email address';
+    say(ORD[n].charAt(0).toUpperCase() + ORD[n].slice(1) + ' ' + kindWord + ' added. Type a short label beside each one, anything you like, so readers know which is which.');
+    $(k + n).focus();
+  }));
+  document.querySelectorAll('.mremove').forEach(btn => btn.addEventListener('click', () => {
+    const k = btn.dataset.kind, n = parseInt(btn.dataset.n, 10), c = $(k + 'Count');
+    const count = parseInt(c.value, 10) || 1;
+    // shift later entries up so there is never a gap
+    for (let i = n; i < count; i++) {
+      const cur = i === 1 ? k : k + i, next = k + (i + 1);
+      $(cur).value = $(next).value; $(k + 'L' + i).value = $(k + 'L' + (i + 1)).value;
+    }
+    $(k + count).value = ''; $(k + 'L' + count).value = '';
+    c.value = String(Math.max(1, count - 1)); render();
+    say(ORD[n].charAt(0).toUpperCase() + ORD[n].slice(1) + ' ' + (k === 'phone' ? 'phone number' : 'email address') + ' removed.');
+    $(count - 1 >= 2 ? k + (count - 1) : k).focus();
+  }));
 
   // ---------- validation ----------
   function validate(el) {
     const v = el.value.trim(); let msg = '';
     if (v) {
-      if (el.id === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) msg = 'Enter an email like name@example.com.';
+      if (/^email\d?$/.test(el.id) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) msg = 'Enter an email like name@example.com.';
       if (el.id === 'website' && !/\.[a-z]{2,}/i.test(v)) msg = 'Enter a web address like example.com.';
       if (el.id === 'customColour' && !/^#?[0-9a-f]{6}$/i.test(v)) msg = 'Use a six-digit code like #ff6600.';
     }
@@ -741,7 +993,7 @@
     el.setAttribute('aria-invalid', msg ? 'true' : 'false');
     return !msg;
   }
-  ['email', 'website', 'customColour'].forEach(id => {
+  ['email', 'email2', 'email3', 'website', 'customColour'].forEach(id => {
     $(id).addEventListener('blur', e => validate(e.target));
     $(id).addEventListener('input', e => { if (e.target.getAttribute('aria-invalid') === 'true') validate(e.target); });
   });
@@ -758,7 +1010,16 @@
     $('embedPanel').hidden = s.imageMode !== 'embed';
     $('linkPanel').hidden = s.imageMode !== 'link';
     $('imageOptions').hidden = s.imageMode === 'none';
-    if (s.imageMode === 'embed') showEmbedUI();
+    ['phone', 'email'].forEach(k => {
+      const n = Math.max(1, Math.min(3, parseInt(s[k + 'Count'], 10) || 1));
+      for (let i = 1; i <= 3; i++) { $(k + 'Row' + i).hidden = i > n; $(k + 'L' + i).hidden = n < 2; }
+      $('add' + k.charAt(0).toUpperCase() + k.slice(1)).hidden = n >= 3;
+      $(k + 'Group').classList.toggle('show-hint', n >= 2);
+    });
+    $('bannerEmbedPanel').hidden = s.bannerMode !== 'embed';
+    $('bannerLinkPanel').hidden = s.bannerMode !== 'link';
+    $('bannerOptions').hidden = s.bannerMode === 'none';
+    if (s.imageMode === 'embed' || s.bannerMode === 'embed') showEmbedUI();
     PLATFORMS.forEach(p => { $('sub_' + p.id).hidden = !s['on_' + p.id]; });
     const html = build(s), plain = buildPlain(s);
     if (html !== lastHtml) { lastHtml = html; preview.innerHTML = html; htmlBox.value = html; }
@@ -807,17 +1068,17 @@
   // Typing only saves; the preview and code rebuild when a field is finished (change) or a
   // radio/checkbox toggles. Rebuilding the preview on every keystroke made VoiceOver jump.
   form.addEventListener('input', e => { if (e.target.type === 'radio' || e.target.type === 'checkbox') return; save(); });
-  form.addEventListener('change', render);
+  form.addEventListener('change', e => { normaliseCase(e.target); render(); });
   $('btnCopyRich').addEventListener('click', copyRich);
   $('btnCopyHtml').addEventListener('click', () => copyText(htmlBox.value, 'HTML code'));
   $('btnCopyText').addEventListener('click', () => copyText(plainBox.value, 'Plain text signature'));
   $('btnDescribe').addEventListener('click', () => say(describe(readState())));
   $('btnClear').addEventListener('click', () => {
     if (!confirm('Clear all your details and start again?')) return;
-    form.reset(); embeddedImage = ''; embeddedName = '';
+    form.reset(); embeddedImage = ''; embeddedName = ''; bannerImage = ''; bannerName = '';
     showEmbedUI();
-    ['email', 'website', 'customColour'].forEach(id => { $(id).setAttribute('aria-invalid', 'false'); const er = $('err_' + id); if (er) er.textContent = ''; });
-    try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_KEY + '-img'); } catch (e) {}
+    ['email', 'email2', 'email3', 'website', 'customColour'].forEach(id => { $(id).setAttribute('aria-invalid', 'false'); const er = $('err_' + id); if (er) er.textContent = ''; });
+    try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_KEY + '-img'); localStorage.removeItem(STORAGE_KEY + '-banner'); } catch (e) {}
     $('moreMenu').removeAttribute('open'); render(); say('Everything cleared.'); $('name').focus();
   });
 
@@ -829,6 +1090,10 @@
     if (img) { const o = JSON.parse(img); embeddedImage = o.data; embeddedName = o.name;
       $('thumb').src = o.data; $('thumbName').textContent = o.name;
       $('thumbSize').textContent = (o.w && o.h ? o.w + ' by ' + o.h + ' pixels, about ' + o.kb : ''); }
+    const bn = localStorage.getItem(STORAGE_KEY + '-banner');
+    if (bn) { const o = JSON.parse(bn); bannerImage = o.data; bannerName = o.name;
+      $('bannerThumb').src = o.data; $('bannerThumbName').textContent = o.name;
+      $('bannerThumbSize').textContent = (o.w && o.h ? o.w + ' by ' + o.h + ' pixels, about ' + o.kb : ''); }
   } catch (e) {}
   showEmbedUI();
   flattenAll();
