@@ -241,7 +241,7 @@
             <label for="phone">Phone</label>
             <div class="mline">
               <input id="phone" type="tel" data-key="phone" autocomplete="tel">
-              <input id="phoneL1" type="text" class="mlabel" data-key="phoneL1" placeholder="Label" aria-label="Short label for this phone, such as Mobile or Office" hidden>
+              <input id="phoneL1" type="text" class="mlabel" data-key="phoneL1" placeholder="e.g. Mobile" aria-label="Short label for this phone. Type anything you like, for example Mobile, Office or WhatsApp" hidden>
 
             </div>
 
@@ -250,7 +250,7 @@
             <label for="phone2">Second Phone</label>
             <div class="mline">
               <input id="phone2" type="tel" data-key="phone2">
-              <input id="phoneL2" type="text" class="mlabel" data-key="phoneL2" placeholder="Label" aria-label="Short label for this phone, such as Mobile or Office" hidden>
+              <input id="phoneL2" type="text" class="mlabel" data-key="phoneL2" placeholder="e.g. Mobile" aria-label="Short label for this phone. Type anything you like, for example Mobile, Office or WhatsApp" hidden>
               <button type="button" class="btn-secondary btn-small mremove" data-kind="phone" data-n="2" aria-label="Remove second phone">Remove</button>
             </div>
 
@@ -259,13 +259,13 @@
             <label for="phone3">Third Phone</label>
             <div class="mline">
               <input id="phone3" type="tel" data-key="phone3">
-              <input id="phoneL3" type="text" class="mlabel" data-key="phoneL3" placeholder="Label" aria-label="Short label for this phone, such as Mobile or Office" hidden>
+              <input id="phoneL3" type="text" class="mlabel" data-key="phoneL3" placeholder="e.g. Mobile" aria-label="Short label for this phone. Type anything you like, for example Mobile, Office or WhatsApp" hidden>
               <button type="button" class="btn-secondary btn-small mremove" data-kind="phone" data-n="3" aria-label="Remove third phone">Remove</button>
             </div>
 
           </div>
           <button type="button" id="addPhone" class="btn-secondary btn-small madd" data-kind="phone" aria-describedby="hint_addphone">Add another phone</button>
-          <span class="hint" id="hint_addphone">Two is plenty. Three starts to look indecisive.</span>
+          <span class="hint" id="hint_addphone">Type your own short label beside each number, such as Mobile, Office or WhatsApp. Two is plenty. Three starts to look indecisive.</span>
         </div>
         <div class="multi" id="emailGroup">
           <input type="hidden" id="emailCount" data-key="emailCount" value="1">
@@ -273,7 +273,7 @@
             <label for="email">Email</label>
             <div class="mline">
               <input id="email" type="email" data-key="email" autocomplete="email" aria-describedby="err_email">
-              <input id="emailL1" type="text" class="mlabel" data-key="emailL1" placeholder="Label" aria-label="Short label for this email, such as Mobile or Office" hidden>
+              <input id="emailL1" type="text" class="mlabel" data-key="emailL1" placeholder="e.g. Work" aria-label="Short label for this email. Type anything you like, for example Work, Personal or Bookings" hidden>
 
             </div>
             <span class="err" id="err_email" role="alert"></span>
@@ -282,7 +282,7 @@
             <label for="email2">Second Email</label>
             <div class="mline">
               <input id="email2" type="email" data-key="email2" aria-describedby="err_email2">
-              <input id="emailL2" type="text" class="mlabel" data-key="emailL2" placeholder="Label" aria-label="Short label for this email, such as Mobile or Office" hidden>
+              <input id="emailL2" type="text" class="mlabel" data-key="emailL2" placeholder="e.g. Work" aria-label="Short label for this email. Type anything you like, for example Work, Personal or Bookings" hidden>
               <button type="button" class="btn-secondary btn-small mremove" data-kind="email" data-n="2" aria-label="Remove second email">Remove</button>
             </div>
             <span class="err" id="err_email2" role="alert"></span>
@@ -291,13 +291,13 @@
             <label for="email3">Third Email</label>
             <div class="mline">
               <input id="email3" type="email" data-key="email3" aria-describedby="err_email3">
-              <input id="emailL3" type="text" class="mlabel" data-key="emailL3" placeholder="Label" aria-label="Short label for this email, such as Mobile or Office" hidden>
+              <input id="emailL3" type="text" class="mlabel" data-key="emailL3" placeholder="e.g. Work" aria-label="Short label for this email. Type anything you like, for example Work, Personal or Bookings" hidden>
               <button type="button" class="btn-secondary btn-small mremove" data-kind="email" data-n="3" aria-label="Remove third email">Remove</button>
             </div>
             <span class="err" id="err_email3" role="alert"></span>
           </div>
           <button type="button" id="addEmail" class="btn-secondary btn-small madd" data-kind="email" aria-describedby="hint_addemail">Add another email</button>
-          <span class="hint" id="hint_addemail">Two is plenty. Three starts to look indecisive.</span>
+          <span class="hint" id="hint_addemail">Type your own short label beside each address, such as Work, Personal or Bookings. Two is plenty. Three starts to look indecisive.</span>
         </div>
         <label for="website">Website</label>
         <input id="website" type="url" data-key="website" autocomplete="url" aria-describedby="hint_website err_website">
@@ -963,7 +963,7 @@
     const n = Math.min(3, (parseInt(c.value, 10) || 1) + 1);
     c.value = String(n); render();
     const kindWord = k === 'phone' ? 'phone number' : 'email address';
-    say(ORD[n].charAt(0).toUpperCase() + ORD[n].slice(1) + ' ' + kindWord + ' added. Give each one a short label so readers know which is which.');
+    say(ORD[n].charAt(0).toUpperCase() + ORD[n].slice(1) + ' ' + kindWord + ' added. Type a short label beside each one, anything you like, so readers know which is which.');
     $(k + n).focus();
   }));
   document.querySelectorAll('.mremove').forEach(btn => btn.addEventListener('click', () => {
