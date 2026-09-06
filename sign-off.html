@@ -25,6 +25,7 @@
     --sans: -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html { font-size: 17px; -webkit-text-size-adjust: 100%; }
   body { margin: 0; font-family: var(--sans); color: var(--text); background: var(--bg); line-height: 1.45; -webkit-font-smoothing: antialiased; }
   .wrap { max-width: 40rem; margin: 0 auto; padding: 0 1rem; }
@@ -515,6 +516,18 @@
             <option value="20">20 pixels</option><option value="24" selected>24 pixels</option><option value="32">32 pixels</option>
           </select>
         </details>
+
+        <details class="inline">
+          <summary>Contact card (vCard) <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <p class="hint" style="margin-top:.4rem">A contact card is a small file people can open to add you to their Contacts in one tap. It uses the same details as your signature, so there's nothing extra to type.</p>
+          <label class="opt"><input type="checkbox" id="vcardOn" data-key="vcardOn"><span>Also make a contact card from these details</span></label>
+          <div id="vcardOptions" hidden>
+            <label class="opt" style="margin-top:.5rem"><input type="checkbox" id="vcardPhoto" data-key="vcardPhoto" checked><span>Include my logo or photo as the contact picture</span></label>
+            <label for="vcardUrl">Contact card web address</label>
+            <input id="vcardUrl" type="url" data-key="vcardUrl" aria-describedby="hint_vcardurl">
+            <span class="hint" id="hint_vcardurl">Optional. If you have saved your card and put the .vcf file online, paste its address here and the signature gains an "Add me to your contacts" link. Anything at a web address is public. Only link a card that holds details you'd put on a poster, and never a home address.</span>
+          </div>
+        </details>
       </details>
     </form>
 
@@ -537,6 +550,9 @@
     <section class="stage-static" aria-labelledby="s5">
       <h2 class="stage-h" id="s5"><span class="n" aria-hidden="true">05</span>Copy your signature</h2>
       <button type="button" id="btnCopyRich" class="btn-primary">Copy signature</button>
+      <div class="actions" id="vcardActions" hidden style="margin-top:.6rem">
+        <button type="button" id="btnVcard" class="btn-secondary">Save contact card</button>
+      </div>
       <div class="status" role="status" aria-live="polite" id="status"></div>
 
       <details class="help">
@@ -549,6 +565,8 @@
         <ol><li>Press Copy signature.</li><li>Open Settings, See all settings, scroll to Signature and choose Create new.</li><li>Paste, then press Save Changes at the bottom.</li></ol>
         <h3>Apple Mail on Mac</h3>
         <ol><li>Press Copy signature.</li><li>Open Mail, Settings, Signatures, choose the account and press the plus button.</li><li>Paste into the right-hand box. Untick "Always match my default message font".</li></ol>
+        <h3>On a shared or borrowed device</h3>
+        <p>Sign Off remembers what you type on this device so you can come back to it. If the device isn't yours, open the menu at the top right and choose "Clear everything and start again" when you're finished.</p>
       </details>
       <details class="help">
         <summary>For the technically minded <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
@@ -733,6 +751,11 @@
       return '<tr><td style="padding-top:8px;' + base + 'font-size:13px;">' + socials.map(x =>
         '<a href="' + esc(x.href) + '" style="' + link + '">' + esc(x.label) + '</a>').join(sep) + '</td></tr>';
     }
+    function vcardRow() {
+      const u = s.vcardOn ? (s.vcardUrl || '').trim() : '';
+      if (!u) return '';
+      return '<tr><td style="padding-top:8px;' + base + 'font-size:12px;"><a href="' + esc(normUrl(u)) + '" style="' + link + '">Add me to your contacts</a></td></tr>';
+    }
     function nameBlock() {
       let h = '<tr><td style="' + base + 'font-size:17px;line-height:22px;font-weight:bold;color:' + col + ';">' + esc(s.name) + '</td></tr>';
       const tc = [s.title, s.company].filter(Boolean).map(esc).join(sep);
@@ -759,7 +782,7 @@
       const left = src ? '<td style="vertical-align:top;padding-right:16px;">' + image(size) + '</td>' : '';
       return withBanner(s, table + '<tr>' + left +
         '<td style="vertical-align:top;border-left:3px solid ' + col + ';padding-left:14px;">' +
-          table + nameBlock() + '<tr><td style="padding-top:6px;"></td></tr>' + contactLines() + socialRow() + '</table>' +
+          table + nameBlock() + '<tr><td style="padding-top:6px;"></td></tr>' + contactLines() + socialRow() + vcardRow() + '</table>' +
         '</td></tr></table>');
     }
     if (s.layout === 'compact') {
@@ -774,13 +797,13 @@
       h += '<tr><td style="' + base + '">' + line1 + '</td></tr>';
       if (parts.length) h += '<tr><td style="' + base + 'font-size:13px;">' + parts.join(sep) + '</td></tr>';
       if (s.tagline) h += '<tr><td style="' + base + 'font-size:13px;font-style:italic;color:' + grey + ';">' + esc(s.tagline) + '</td></tr>';
-      return withBanner(s, h + socialRow() + '</table>');
+      return withBanner(s, h + socialRow() + vcardRow() + '</table>');
     }
     let h = table;
     if (src) h += '<tr><td style="padding-bottom:10px;">' + image(size) + '</td></tr>';
     h += nameBlock();
     h += '<tr><td style="padding:8px 0 6px;">' + table + '<tr><td width="48" height="2" bgcolor="' + col + '" style="width:48px;height:2px;background:' + col + ';font-size:1px;line-height:2px;">&nbsp;</td></tr></table></td></tr>';
-    return withBanner(s, h + contactLines() + socialRow() + '</table>');
+    return withBanner(s, h + contactLines() + socialRow() + vcardRow() + '</table>');
   }
 
   function buildPlain(s) {
@@ -797,6 +820,7 @@
     const soc = activeSocials(s);
     if (soc.length) { lines.push(''); soc.forEach(x => lines.push(x.label + ': ' + prettyUrl(x.href))); }
     if (bannerSrc(s) && (s.bannerLink || '').trim()) { lines.push(''); lines.push((s.bannerAlt || 'Banner') + ': ' + prettyUrl(s.bannerLink)); }
+    if (s.vcardOn && (s.vcardUrl || '').trim()) { lines.push(''); lines.push('Add me to your contacts: ' + prettyUrl(s.vcardUrl)); }
     return lines.join('\n');
   }
 
@@ -828,6 +852,7 @@
     const contacts = [named(ph, 'phone', 'phone numbers'), named(em, 'email', 'email addresses'), s.website && 'website', s.address && 'address'].filter(Boolean);
     if (contacts.length) parts.push('Contact details follow as clickable ' + cName + ' links: ' + contacts.join(', ') + '.');
     if (soc.length) parts.push('At the bottom, ' + soc.length + ' social link' + (soc.length > 1 ? 's' : '') + ' as ' + (s.socialStyle === 'icons' ? 'clickable icons' : 'text links') + ': ' + soc.map(x => x.label).join(', ') + '.');
+    if (s.vcardOn && (s.vcardUrl || '').trim()) parts.push('A small "Add me to your contacts" link comes after the social links.');
     const bsrc = bannerSrc(s);
     if (bsrc) parts.push((s.bannerPos === 'above' ? 'Above all of that' : 'Beneath everything') + ' is a full-width banner, ' + (s.bannerAlt ? 'described as "' + s.bannerAlt + '"' : 'with no description yet') + ', which links to ' + prettyUrl((s.bannerLink || '').trim() || s.website || '') + '.');
     else if (s.bannerMode !== 'none') parts.push('You turned on a banner but have not ' + (s.bannerMode === 'embed' ? 'picked one yet.' : 'entered its web address yet.'));
@@ -927,7 +952,7 @@
     const m = (u || '').trim().match(/^((?:https?:\/\/)?)([^\/?#]*)(.*)$/i);
     return m ? m[1].toLowerCase() + m[2].toLowerCase() + m[3] : u;
   }
-  const URL_FIELDS = () => ['website', 'imageUrl', 'iconBase', 'bannerUrl', 'bannerLink'].concat(PLATFORMS.map(p => 'url_' + p.id));
+  const URL_FIELDS = () => ['website', 'imageUrl', 'iconBase', 'bannerUrl', 'bannerLink', 'vcardUrl'].concat(PLATFORMS.map(p => 'url_' + p.id));
   function normaliseCase(el) {
     if (!el || !el.value) return false;
     let v = el.value;
@@ -1016,6 +1041,8 @@
       $('add' + k.charAt(0).toUpperCase() + k.slice(1)).hidden = n >= 3;
       $(k + 'Group').classList.toggle('show-hint', n >= 2);
     });
+    $('vcardOptions').hidden = !s.vcardOn;
+    $('vcardActions').hidden = !s.vcardOn;
     $('bannerEmbedPanel').hidden = s.bannerMode !== 'embed';
     $('bannerLinkPanel').hidden = s.bannerMode !== 'link';
     $('bannerOptions').hidden = s.bannerMode === 'none';
@@ -1028,6 +1055,59 @@
   }
   function save(s) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s || readState())); } catch (e) {} }
   function say(msg) { status.textContent = ''; setTimeout(() => { status.textContent = msg; }, 50); }
+
+  // ---------- contact card (vCard) ----------
+  function vEsc(t) { return String(t || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;'); }
+  function telType(label) {
+    const l = (label || '').toLowerCase();
+    if (/office|work|desk|studio|clinic/.test(l)) return 'WORK,VOICE';
+    if (/home|house|land/.test(l)) return 'HOME,VOICE';
+    return 'CELL,VOICE';
+  }
+  function emailType(label) { return /work|office|podcast|business/.test((label || '').toLowerCase()) ? 'WORK' : /home|personal/.test((label || '').toLowerCase()) ? 'HOME' : 'INTERNET'; }
+  function buildVcard(s) {
+    const name = (s.name || '').trim();
+    const words = name.split(/\s+/).filter(Boolean);
+    const family = words.length > 1 ? words[words.length - 1] : '';
+    const given = words.length > 1 ? words.slice(0, -1).join(' ') : name;
+    const L = ['BEGIN:VCARD', 'VERSION:3.0'];
+    L.push('FN:' + vEsc(name));
+    L.push('N:' + vEsc(family) + ';' + vEsc(given) + ';;;');
+    if (s.company) L.push('ORG:' + vEsc(s.company.trim()));
+    if (s.title) L.push('TITLE:' + vEsc(s.title.trim()));
+    multi(s, 'phone').forEach(x => L.push('TEL;TYPE=' + telType(x.l) + ':' + x.v.replace(/\s+/g, '')));
+    multi(s, 'email').forEach(x => L.push('EMAIL;TYPE=' + emailType(x.l) + ':' + x.v));
+    if (s.website) L.push('URL:' + normUrl(s.website));
+    if (s.address) L.push('ADR;TYPE=WORK:;;' + vEsc(s.address.trim()) + ';;;;');
+    if (s.tagline) L.push('NOTE:' + vEsc(s.tagline.trim()));
+    const src = imageSrc(s);
+    if (s.vcardPhoto && src) {
+      const m = src.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/i);
+      if (m) L.push('PHOTO;ENCODING=b;TYPE=' + (m[1].toUpperCase() === 'JPG' ? 'JPEG' : m[1].toUpperCase()) + ':' + m[2]);
+      else L.push('PHOTO;VALUE=URI:' + src);
+    }
+    L.push('END:VCARD');
+    return L.join('\r\n') + '\r\n';
+  }
+  async function saveVcard() {
+    const s = readState();
+    if (!(s.name || '').trim()) { say('Add your name first. A contact card needs at least a name.'); $('name').focus(); return; }
+    const text = buildVcard(s);
+    const fname = (s.name.trim().replace(/[^\w\- ]+/g, '').replace(/\s+/g, '-') || 'contact') + '.vcf';
+    const file = new File([text], fname, { type: 'text/vcard' });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: s.name.trim() });
+        say('Contact card shared. Choose Add to Contacts, Messages or Mail from the sheet.');
+        return;
+      }
+    } catch (e) { if (e && e.name === 'AbortError') { say('Sharing cancelled.'); return; } }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a'); a.href = url; a.download = fname; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    say('Contact card saved as ' + fname + '. Open it to add the details to Contacts, or attach it to an email.');
+  }
+  $('btnVcard').addEventListener('click', saveVcard);
 
   // ---------- copy ----------
   async function copyRich() {
