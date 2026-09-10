@@ -750,6 +750,14 @@
     const img = '<img src="' + esc(src) + '" width="' + w + '" alt="' + esc(s.bannerAlt || '') + '" style="display:block;border:0;width:100%;max-width:' + w + 'px;height:auto;">';
     return href ? '<a href="' + esc(href) + '" style="text-decoration:none;display:block;max-width:' + w + 'px;">' + img + '</a>' : img;
   }
+  // What gets copied: an empty paragraph for the cursor to land on while composing, then the whole
+  // signature inside one single-cell table so mail apps treat it as a solid block that typing cannot fall into.
+  function forEmail(s, core) {
+    const font = s.font || 'Arial, Helvetica, sans-serif';
+    return '<p style="margin:0;font-family:' + font + ';font-size:14px;line-height:20px;">&nbsp;</p>' +
+      '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;"><tr><td style="padding:0;">' +
+      core + '</td></tr></table>';
+  }
   function withBanner(s, core) {
     const b = bannerHtml(s);
     if (!b) return core;
@@ -1091,7 +1099,7 @@
     if (s.imageMode === 'embed' || s.bannerMode === 'embed') showEmbedUI();
     PLATFORMS.forEach(p => { $('sub_' + p.id).hidden = !s['on_' + p.id]; });
     const html = build(s), plain = buildPlain(s);
-    if (html !== lastHtml) { lastHtml = html; preview.innerHTML = html; htmlBox.value = html; }
+    if (html !== lastHtml) { lastHtml = html; preview.innerHTML = html; htmlBox.value = forEmail(s, html); }
     if (plain !== plainBox.value) plainBox.value = plain;
     save(s);
   }
@@ -1153,7 +1161,7 @@
 
   // ---------- copy ----------
   async function copyRich() {
-    const s = readState(), html = lastHtml, text = buildPlain(s);
+    const s = readState(), html = forEmail(s, lastHtml), text = buildPlain(s);
     const after = s.imageMode === 'embed' && embeddedImage ? ' Note: your embedded image will not show for people reading in Gmail.' : '';
     try {
       if (navigator.clipboard && window.ClipboardItem) {
@@ -1166,9 +1174,11 @@
       throw new Error('no ClipboardItem');
     } catch (e) {
       try {
-        const range = document.createRange(); range.selectNodeContents(preview);
+        const tmp = document.createElement('div'); tmp.innerHTML = html;
+        tmp.style.cssText = 'position:fixed;left:-9999px;top:0;background:#fff;color:#222;'; document.body.appendChild(tmp);
+        const range = document.createRange(); range.selectNodeContents(tmp);
         const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
-        const ok = document.execCommand('copy'); sel.removeAllRanges();
+        const ok = document.execCommand('copy'); sel.removeAllRanges(); tmp.remove();
         if (ok) copied(after); else say('Copying failed. Open "For the technically minded" and copy the HTML there.');
       } catch (e2) { say('Copying failed. Open "For the technically minded" and copy the HTML there.'); }
     }
