@@ -442,14 +442,21 @@
           <span class="hint" id="hint_alt">What a screen reader says, for example "Tech Doc Podcast logo".</span>
           <div class="row">
             <div><label for="imageSize">Image size</label>
-              <select id="imageSize" data-key="imageSize">
-                <option value="64">64 pixels (small)</option><option value="90" selected>90 pixels (medium)</option><option value="120">120 pixels (large)</option>
+              <select id="imageSize" data-key="imageSize" aria-describedby="hint_imagesize">
+                <option value="64">64 pixels (small)</option><option value="90" selected>90 pixels (medium)</option><option value="120">120 pixels (large)</option><option value="custom">Custom size</option>
               </select></div>
             <div><label for="imageShape">Shape</label>
               <select id="imageShape" data-key="imageShape">
                 <option value="square">Square</option><option value="round">Circle (good for a headshot)</option>
               </select></div>
           </div>
+          <div id="imageSizeCustomWrap" hidden>
+            <label for="imageSizeCustom">Custom size in pixels</label>
+            <input id="imageSizeCustom" type="number" inputmode="numeric" min="32" max="240" step="1" data-key="imageSizeCustom" placeholder="90" aria-describedby="hint_imagesizecustom err_imageSizeCustom">
+            <span class="hint" id="hint_imagesizecustom">Any whole number from 32 to 240. That is the width and height of the picture.</span>
+            <span class="err" id="err_imageSizeCustom" role="alert"></span>
+          </div>
+          <span class="hint" id="hint_imagesize">Most email apps show the picture at this size. Gmail and Outlook on the web may scale it slightly.</span>
         </div>
 
         <details class="inline">
@@ -489,11 +496,24 @@
             <label for="bannerLink">Where tapping the banner goes</label>
             <input id="bannerLink" type="url" data-key="bannerLink" aria-describedby="hint_blink">
             <span class="hint" id="hint_blink">Leave blank to use your website.</span>
-            <label for="bannerPos">Position</label>
-            <select id="bannerPos" data-key="bannerPos">
-              <option value="below" selected>Below the signature</option>
-              <option value="above">Above the signature</option>
-            </select>
+            <div class="row">
+              <div><label for="bannerSize">Banner size</label>
+                <select id="bannerSize" data-key="bannerSize" aria-describedby="hint_bannersize">
+                  <option value="240">240 pixels wide (small)</option><option value="320" selected>320 pixels wide (medium)</option><option value="480">480 pixels wide (large)</option><option value="custom">Custom width</option>
+                </select></div>
+              <div><label for="bannerPos">Position</label>
+                <select id="bannerPos" data-key="bannerPos">
+                  <option value="below" selected>Below the signature</option>
+                  <option value="above">Above the signature</option>
+                </select></div>
+            </div>
+            <div id="bannerSizeCustomWrap" hidden>
+              <label for="bannerSizeCustom">Custom width in pixels</label>
+              <input id="bannerSizeCustom" type="number" inputmode="numeric" min="120" max="600" step="1" data-key="bannerSizeCustom" placeholder="320" aria-describedby="hint_bannersizecustom err_bannerSizeCustom">
+              <span class="hint" id="hint_bannersizecustom">Any whole number from 120 to 600. The height follows the picture's own proportions.</span>
+              <span class="err" id="err_bannerSizeCustom" role="alert"></span>
+            </div>
+            <span class="hint" id="hint_bannersize">On narrow phone screens the banner shrinks to fit, whatever size you pick.</span>
           </div>
         </details>
 
@@ -706,12 +726,24 @@
     if (s.bannerMode === 'link') return (s.bannerUrl || '').trim();
     return '';
   }
+  // Chosen sizes in pixels. A custom entry is clamped to the allowed range; an empty or unusable one falls back to the default.
+  const IMAGE_RANGE = [32, 240], BANNER_RANGE = [120, 600];
+  function pickSize(choice, custom, range, fallback) {
+    if (choice === 'custom') {
+      const n = parseInt(custom, 10);
+      return isNaN(n) ? fallback : Math.max(range[0], Math.min(range[1], n));
+    }
+    return parseInt(choice, 10) || fallback;
+  }
+  const imagePx = s => pickSize(s.imageSize, s.imageSizeCustom, IMAGE_RANGE, 90);
+  const bannerPx = s => pickSize(s.bannerSize, s.bannerSizeCustom, BANNER_RANGE, 320);
   function bannerHtml(s) {
     const src = bannerSrc(s);
     if (!src) return '';
     const href = normUrl((s.bannerLink || '').trim() || s.website);
-    const img = '<img src="' + esc(src) + '" width="320" alt="' + esc(s.bannerAlt || '') + '" style="display:block;border:0;width:100%;max-width:320px;height:auto;">';
-    return href ? '<a href="' + esc(href) + '" style="text-decoration:none;display:block;max-width:320px;">' + img + '</a>' : img;
+    const w = bannerPx(s);
+    const img = '<img src="' + esc(src) + '" width="' + w + '" alt="' + esc(s.bannerAlt || '') + '" style="display:block;border:0;width:100%;max-width:' + w + 'px;height:auto;">';
+    return href ? '<a href="' + esc(href) + '" style="text-decoration:none;display:block;max-width:' + w + 'px;">' + img + '</a>' : img;
   }
   function withBanner(s, core) {
     const b = bannerHtml(s);
@@ -734,7 +766,7 @@
     const link = 'color:' + col + ';text-decoration:none;';
     const socials = activeSocials(s);
     const src = imageSrc(s);
-    const size = parseInt(s.imageSize, 10) || 90;
+    const size = imagePx(s);
     const round = s.imageShape === 'round';
     const sep = ' <span style="color:#999999;">|</span> ';
     const table = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">';
@@ -793,7 +825,7 @@
       multi(s, 'email').forEach(x => parts.push(lab(x) + '<a href="mailto:' + esc(x.v) + '" style="' + link + '">' + esc(x.v) + '</a>'));
       if (s.website) parts.push('<a href="' + esc(normUrl(s.website)) + '" style="' + link + '">' + esc(prettyUrl(s.website)) + '</a>');
       let h = table;
-      if (src) h += '<tr><td style="padding-bottom:8px;">' + image(Math.min(size, 64)) + '</td></tr>';
+      if (src) h += '<tr><td style="padding-bottom:8px;">' + image(size) + '</td></tr>';
       h += '<tr><td style="' + base + '">' + line1 + '</td></tr>';
       if (parts.length) h += '<tr><td style="' + base + 'font-size:13px;">' + parts.join(sep) + '</td></tr>';
       if (s.tagline) h += '<tr><td style="' + base + 'font-size:13px;font-style:italic;color:' + grey + ';">' + esc(s.tagline) + '</td></tr>';
@@ -834,13 +866,14 @@
     const src = imageSrc(s);
     const imgWord = s.imageAlt || 'image';
     const round = s.imageShape === 'round';
+    const sizeWords = imagePx(s) + ' pixels ' + (round ? 'across, cropped to a circle' : 'square');
     const layouts = {
       classic: 'The Classic layout stacks everything in one column with a short ' + cName + ' rule under your name.',
       sidebar: 'The Sidebar layout puts ' + (src ? 'your ' + imgWord + ' on the left and ' : '') + 'a thin vertical ' + cName + ' line beside your details.',
       compact: 'The Compact layout keeps everything to two tight lines.'
     };
     const parts = [layouts[s.layout] || layouts.classic];
-    if (src && s.layout !== 'sidebar') parts.push('Your ' + imgWord + ' sits at the top' + (round ? ', cropped to a circle' : '') + '.');
+    if (src) parts.push('Your ' + imgWord + ' is ' + sizeWords + (s.layout === 'sidebar' ? '.' : ' and sits at the top.'));
     if (s.imageMode === 'embed' && !src) parts.push('You chose to use an image from your device but have not picked one yet.');
     if (s.imageMode === 'link' && !src) parts.push('You chose an image web address but the box is empty.');
     parts.push('Your name' + (s.name ? ', ' + s.name + ',' : '') + ' is in bold ' + cName + ' ' + fontName + '.');
@@ -854,7 +887,7 @@
     if (soc.length) parts.push('At the bottom, ' + soc.length + ' social link' + (soc.length > 1 ? 's' : '') + ' as ' + (s.socialStyle === 'icons' ? 'clickable icons' : 'text links') + ': ' + soc.map(x => x.label).join(', ') + '.');
     if (s.vcardOn && (s.vcardUrl || '').trim()) parts.push('A small "Add me to your contacts" link comes after the social links.');
     const bsrc = bannerSrc(s);
-    if (bsrc) parts.push((s.bannerPos === 'above' ? 'Above all of that' : 'Beneath everything') + ' is a full-width banner, ' + (s.bannerAlt ? 'described as "' + s.bannerAlt + '"' : 'with no description yet') + ', which links to ' + prettyUrl((s.bannerLink || '').trim() || s.website || '') + '.');
+    if (bsrc) parts.push((s.bannerPos === 'above' ? 'Above all of that' : 'Beneath everything') + ' is a banner ' + bannerPx(s) + ' pixels wide, ' + (s.bannerAlt ? 'described as "' + s.bannerAlt + '"' : 'with no description yet') + ', which links to ' + prettyUrl((s.bannerLink || '').trim() || s.website || '') + '.');
     else if (s.bannerMode !== 'none') parts.push('You turned on a banner but have not ' + (s.bannerMode === 'embed' ? 'picked one yet.' : 'entered its web address yet.'));
     if (!s.name) parts.push('You have not entered a name yet.');
     return parts.join(' ');
@@ -1012,13 +1045,15 @@
       if (/^email\d?$/.test(el.id) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) msg = 'Enter an email like name@example.com.';
       if (el.id === 'website' && !/\.[a-z]{2,}/i.test(v)) msg = 'Enter a web address like example.com.';
       if (el.id === 'customColour' && !/^#?[0-9a-f]{6}$/i.test(v)) msg = 'Use a six-digit code like #ff6600.';
+      if (el.id === 'imageSizeCustom' && !(/^\d+$/.test(v) && +v >= IMAGE_RANGE[0] && +v <= IMAGE_RANGE[1])) msg = 'Use a whole number from ' + IMAGE_RANGE[0] + ' to ' + IMAGE_RANGE[1] + '.';
+      if (el.id === 'bannerSizeCustom' && !(/^\d+$/.test(v) && +v >= BANNER_RANGE[0] && +v <= BANNER_RANGE[1])) msg = 'Use a whole number from ' + BANNER_RANGE[0] + ' to ' + BANNER_RANGE[1] + '.';
     }
     const errEl = $('err_' + el.id);
     if (errEl) errEl.textContent = msg;
     el.setAttribute('aria-invalid', msg ? 'true' : 'false');
     return !msg;
   }
-  ['email', 'email2', 'email3', 'website', 'customColour'].forEach(id => {
+  ['email', 'email2', 'email3', 'website', 'customColour', 'imageSizeCustom', 'bannerSizeCustom'].forEach(id => {
     $(id).addEventListener('blur', e => validate(e.target));
     $(id).addEventListener('input', e => { if (e.target.getAttribute('aria-invalid') === 'true') validate(e.target); });
   });
@@ -1041,6 +1076,8 @@
       $('add' + k.charAt(0).toUpperCase() + k.slice(1)).hidden = n >= 3;
       $(k + 'Group').classList.toggle('show-hint', n >= 2);
     });
+    $('imageSizeCustomWrap').hidden = s.imageSize !== 'custom';
+    $('bannerSizeCustomWrap').hidden = s.bannerSize !== 'custom';
     $('vcardOptions').hidden = !s.vcardOn;
     $('vcardActions').hidden = !s.vcardOn;
     $('bannerEmbedPanel').hidden = s.bannerMode !== 'embed';
@@ -1148,7 +1185,18 @@
   // Typing only saves; the preview and code rebuild when a field is finished (change) or a
   // radio/checkbox toggles. Rebuilding the preview on every keystroke made VoiceOver jump.
   form.addEventListener('input', e => { if (e.target.type === 'radio' || e.target.type === 'checkbox') return; save(); });
-  form.addEventListener('change', e => { normaliseCase(e.target); render(); });
+  form.addEventListener('change', e => {
+    normaliseCase(e.target); render();
+    const id = e.target.id, s = readState();
+    if (id === 'imageSize' || id === 'imageSizeCustom' || id === 'imageShape') {
+      if (id === 'imageSize' && s.imageSize === 'custom') { $('imageSizeCustom').focus(); say('Type the size you want, from ' + IMAGE_RANGE[0] + ' to ' + IMAGE_RANGE[1] + ' pixels.'); }
+      else say('Picture is now ' + imagePx(s) + ' pixels, ' + (s.imageShape === 'round' ? 'cropped to a circle.' : 'square.') + (imageSrc(s) ? '' : ' Add a picture to see it.'));
+    }
+    if (id === 'bannerSize' || id === 'bannerSizeCustom') {
+      if (id === 'bannerSize' && s.bannerSize === 'custom') { $('bannerSizeCustom').focus(); say('Type the width you want, from ' + BANNER_RANGE[0] + ' to ' + BANNER_RANGE[1] + ' pixels.'); }
+      else say('Banner is now ' + bannerPx(s) + ' pixels wide.' + (bannerSrc(s) ? '' : ' Add a banner to see it.'));
+    }
+  });
   $('btnCopyRich').addEventListener('click', copyRich);
   $('btnCopyHtml').addEventListener('click', () => copyText(htmlBox.value, 'HTML code'));
   $('btnCopyText').addEventListener('click', () => copyText(plainBox.value, 'Plain text signature'));
@@ -1157,7 +1205,7 @@
     if (!confirm('Clear all your details and start again?')) return;
     form.reset(); embeddedImage = ''; embeddedName = ''; bannerImage = ''; bannerName = '';
     showEmbedUI();
-    ['email', 'email2', 'email3', 'website', 'customColour'].forEach(id => { $(id).setAttribute('aria-invalid', 'false'); const er = $('err_' + id); if (er) er.textContent = ''; });
+    ['email', 'email2', 'email3', 'website', 'customColour', 'imageSizeCustom', 'bannerSizeCustom'].forEach(id => { $(id).setAttribute('aria-invalid', 'false'); const er = $('err_' + id); if (er) er.textContent = ''; });
     try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_KEY + '-img'); localStorage.removeItem(STORAGE_KEY + '-banner'); } catch (e) {}
     $('moreMenu').removeAttribute('open'); render(); say('Everything cleared.'); $('name').focus();
   });
