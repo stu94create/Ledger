@@ -43,9 +43,14 @@
 
   /* Overflow menu (top right) */
   .more { position: absolute; top: 1.1rem; right: 0; }
-  .more summary { list-style: none; width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-soft); }
-  .more summary::-webkit-details-marker { display: none; }
-  .more summary:hover { border-color: var(--line-strong); color: var(--text); }
+  /* Summaries keep their native display. Safari stops treating a summary as a button when it is
+     given display:flex, and VoiceOver's double tap then does nothing. Layout goes on the inner .sum. */
+  summary { list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::marker { content: ''; }
+  .more summary { cursor: pointer; color: var(--text-soft); }
+  .more summary .sum { width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
+  .more summary:hover .sum { border-color: var(--line-strong); color: var(--text); }
   .more .menu { position: absolute; right: 0; top: 3.1rem; min-width: 13rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: .4rem; box-shadow: 0 12px 30px rgba(0,0,0,.45); z-index: 5; }
   .more .menu button { width: 100%; text-align: left; background: transparent; border: 0; color: var(--text); padding: .8rem .9rem; border-radius: 8px; font-weight: 500; }
   .more .menu button:hover { background: var(--field); }
@@ -53,8 +58,8 @@
 
   /* Stages */
   .stage { border-top: 1px solid var(--line-soft); padding: .35rem 0 1.2rem; }
-  .stage > summary { list-style: none; display: flex; align-items: baseline; gap: .7rem; padding: .95rem 0 .75rem; cursor: pointer; }
-  .stage > summary::-webkit-details-marker { display: none; }
+  .stage > summary { padding: .95rem 0 .75rem; cursor: pointer; }
+  .stage > summary .sum { display: flex; align-items: baseline; gap: .7rem; }
   .stage h2, .stage-h { font-family: var(--serif); font-weight: 400; font-size: 1.5rem; margin: 0; display: flex; align-items: baseline; gap: .7rem; flex: 1; }
   .n { font-family: var(--sans); font-weight: 700; font-size: .9rem; color: var(--green); letter-spacing: .03em; }
   .chev { width: 1rem; height: 1rem; flex: none; align-self: center; stroke: var(--text-soft); fill: none; stroke-width: 2; transition: transform .15s ease; }
@@ -95,8 +100,8 @@
 
   /* Inline disclosure for optional fields */
   details.inline { margin-top: .9rem; }
-  details.inline > summary { display: inline-flex; align-items: center; gap: .4rem; color: var(--green); font-weight: 600; cursor: pointer; list-style: none; min-height: 2.75rem; }
-  details.inline > summary::-webkit-details-marker { display: none; }
+  details.inline > summary { color: var(--green); font-weight: 600; cursor: pointer; }
+  details.inline > summary .sum { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.75rem; }
   details.inline > summary .chev { stroke: var(--green); width: .85rem; height: .85rem; }
   details.inline[open] > summary .chev { transform: rotate(180deg); }
 
@@ -186,8 +191,8 @@
 
   details.help { border-top: 1px solid var(--line-soft); padding: .6rem 0; }
   details.help:last-of-type { border-bottom: 1px solid var(--line-soft); }
-  details.help > summary { font-weight: 600; cursor: pointer; padding: .4rem 0; min-height: 2.75rem; display: flex; align-items: center; justify-content: space-between; list-style: none; }
-  details.help > summary::-webkit-details-marker { display: none; }
+  details.help > summary { font-weight: 600; cursor: pointer; padding: .4rem 0; }
+  details.help > summary .sum { display: flex; align-items: center; justify-content: space-between; min-height: 2.75rem; }
   details.help[open] > summary .chev { transform: rotate(180deg); }
   details h3 { font-size: 1rem; margin: 1rem 0 .3rem; }
   details ol { padding-left: 1.3rem; margin: .2rem 0; color: var(--text-soft); }
@@ -212,9 +217,9 @@
     <div class="rule" aria-hidden="true"></div>
 
     <details class="more" id="moreMenu">
-      <summary aria-label="More options">
+      <summary aria-label="More options"><span class="sum">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-      </summary>
+      </span></summary>
       <div class="menu">
         <button type="button" id="btnClear" class="danger">Clear everything and start again</button>
       </div>
@@ -225,10 +230,10 @@
     <form id="form" novalidate autocomplete="on">
 
       <details class="stage" open>
-        <summary>
+        <summary><span class="sum">
           <h2 id="s1"><span class="n" aria-hidden="true">01</span>Your details</h2>
           <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
+        </span></summary>
 
         <label for="name">Full name</label>
         <input id="name" type="text" data-key="name" autocomplete="name">
@@ -311,7 +316,7 @@
         <span class="hint" id="hint_fixcaps">Tidies names and companies dictated in the wrong case, and makes web and email addresses lower-case.</span>
 
         <details class="inline">
-          <summary>More details: tagline and address <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <summary><span class="sum">More details: tagline and address <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
           <label for="tagline">Tagline</label>
           <input id="tagline" type="text" data-key="tagline" aria-describedby="hint_tagline">
           <span class="hint" id="hint_tagline">One short line, such as a motto or your podcast name.</span>
@@ -322,10 +327,10 @@
       </details>
 
       <details class="stage" open>
-        <summary>
+        <summary><span class="sum">
           <h2 id="s2"><span class="n" aria-hidden="true">02</span>The look</h2>
           <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
+        </span></summary>
 
         <fieldset>
           <legend>Signature layout</legend>
@@ -372,7 +377,7 @@
           <div class="swatches" id="colours"></div>
         </fieldset>
         <details class="inline">
-          <summary>Custom colour code <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <summary><span class="sum">Custom colour code <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
           <label for="customColour">Six-digit colour code</label>
           <input id="customColour" type="text" data-key="customColour" placeholder="#ff6600" aria-describedby="hint_custom err_custom">
           <span class="hint" id="hint_custom">Like #ff6600. Overrides the swatch above.</span>
@@ -390,10 +395,10 @@
       </details>
 
       <details class="stage">
-        <summary>
+        <summary><span class="sum">
           <h2 id="s3"><span class="n" aria-hidden="true">03</span>Branding and social links</h2>
           <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
+        </span></summary>
         <p class="lead">Optional. A signature with no picture is the most reliable of all, so skipping this is a perfectly good choice.</p>
 
         <fieldset>
@@ -425,7 +430,7 @@
           <input id="imageUrl" type="url" data-key="imageUrl" aria-describedby="hint_imageurl">
           <span class="hint" id="hint_imageurl">A direct link to the picture itself, ending in .png or .jpg.</span>
           <details class="inline">
-            <summary>How to get a web address for a picture on your phone <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <summary><span class="sum">How to get a web address for a picture on your phone <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
             <ol>
               <li>In Safari, go to postimages.org. No account is needed.</li>
               <li>Tap Choose images, then pick your logo from Photos or Files.</li>
@@ -460,7 +465,7 @@
         </div>
 
         <details class="inline">
-          <summary>Banner image <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <summary><span class="sum">Banner image <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
           <p class="hint" style="margin-top:.4rem">A wide picture attached to your signature, such as show artwork or a promo strip. Best on a main signature rather than one used for replies.</p>
           <fieldset>
             <legend>Where is your banner?</legend>
@@ -527,7 +532,7 @@
         </fieldset>
 
         <details class="inline">
-          <summary>Advanced: use your own icon images <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <summary><span class="sum">Advanced: use your own icon images <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
           <label for="iconBase">Icon folder web address</label>
           <input id="iconBase" type="url" data-key="iconBase" aria-describedby="hint_iconbase">
           <span class="hint" id="hint_iconbase">A public folder with facebook.png, instagram.png, linkedin.png, x.png, youtube.png, tiktok.png and website.png. Leave blank for the built-in set.</span>
@@ -538,7 +543,7 @@
         </details>
 
         <details class="inline">
-          <summary>Contact card (vCard) <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <summary><span class="sum">Contact card (vCard) <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
           <p class="hint" style="margin-top:.4rem">A contact card is a small file people can open to add you to their Contacts in one tap. It uses the same details as your signature, so there's nothing extra to type.</p>
           <label class="opt"><input type="checkbox" id="vcardOn" data-key="vcardOn"><span>Also make a contact card from these details</span></label>
           <div id="vcardOptions" hidden>
@@ -576,7 +581,7 @@
       <div class="status" role="status" aria-live="polite" id="status"></div>
 
       <details class="help">
-        <summary>How to add it to your email app <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <summary><span class="sum">How to add it to your email app <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
         <h3>Mail on iPhone and iPad</h3>
         <ol><li>Press Copy signature.</li><li>Go to Settings, Apps, Mail, Signature, and paste.</li><li>If the colours and layout disappear, shake the phone (or use the undo gesture) and choose Undo Change Attributes.</li></ol>
         <h3>Outlook (Windows or Mac)</h3>
@@ -589,7 +594,7 @@
         <p>Sign Off remembers what you type on this device so you can come back to it. If the device isn't yours, open the menu at the top right and choose "Clear everything and start again" when you're finished.</p>
       </details>
       <details class="help">
-        <summary>For the technically minded <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <summary><span class="sum">For the technically minded <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
         <div class="actions">
           <button type="button" id="btnCopyHtml" class="btn-secondary btn-small">Copy HTML code</button>
           <button type="button" id="btnCopyText" class="btn-secondary btn-small">Copy plain text</button>
@@ -1223,6 +1228,12 @@
       $('bannerThumb').src = o.data; $('bannerThumbName').textContent = o.name;
       $('bannerThumbSize').textContent = (o.w && o.h ? o.w + ' by ' + o.h + ' pixels, about ' + o.kb : ''); }
   } catch (e) {}
+  // Toggle sections ourselves. Safari sometimes ignores an activation on a summary, notably a
+  // VoiceOver double tap, so handle the click and do the open/close here.
+  document.querySelectorAll('details > summary').forEach(sm => sm.addEventListener('click', e => {
+    e.preventDefault();
+    const d = sm.parentElement; d.open = !d.open;
+  }));
   showEmbedUI();
   flattenAll();
   render();
