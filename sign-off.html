@@ -43,9 +43,14 @@
 
   /* Overflow menu (top right) */
   .more { position: absolute; top: 1.1rem; right: 0; }
-  .more summary { list-style: none; width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-soft); }
-  .more summary::-webkit-details-marker { display: none; }
-  .more summary:hover { border-color: var(--line-strong); color: var(--text); }
+  /* Summaries keep their native display. Safari stops treating a summary as a button when it is
+     given display:flex, and VoiceOver's double tap then does nothing. Layout goes on the inner .sum. */
+  summary { list-style: none; }
+  summary::-webkit-details-marker { display: none; }
+  summary::marker { content: ''; }
+  .more summary { cursor: pointer; color: var(--text-soft); }
+  .more summary .sum { width: 2.75rem; height: 2.75rem; border-radius: 50%; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
+  .more summary:hover .sum { border-color: var(--line-strong); color: var(--text); }
   .more .menu { position: absolute; right: 0; top: 3.1rem; min-width: 13rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: .4rem; box-shadow: 0 12px 30px rgba(0,0,0,.45); z-index: 5; }
   .more .menu button { width: 100%; text-align: left; background: transparent; border: 0; color: var(--text); padding: .8rem .9rem; border-radius: 8px; font-weight: 500; }
   .more .menu button:hover { background: var(--field); }
@@ -53,8 +58,8 @@
 
   /* Stages */
   .stage { border-top: 1px solid var(--line-soft); padding: .35rem 0 1.2rem; }
-  .stage > summary { list-style: none; display: flex; align-items: baseline; gap: .7rem; padding: .95rem 0 .75rem; cursor: pointer; }
-  .stage > summary::-webkit-details-marker { display: none; }
+  .stage > summary { padding: .95rem 0 .75rem; cursor: pointer; }
+  .stage > summary .sum { display: flex; align-items: baseline; gap: .7rem; }
   .stage h2, .stage-h { font-family: var(--serif); font-weight: 400; font-size: 1.5rem; margin: 0; display: flex; align-items: baseline; gap: .7rem; flex: 1; }
   .n { font-family: var(--sans); font-weight: 700; font-size: .9rem; color: var(--green); letter-spacing: .03em; }
   .chev { width: 1rem; height: 1rem; flex: none; align-self: center; stroke: var(--text-soft); fill: none; stroke-width: 2; transition: transform .15s ease; }
@@ -95,8 +100,8 @@
 
   /* Inline disclosure for optional fields */
   details.inline { margin-top: .9rem; }
-  details.inline > summary { display: inline-flex; align-items: center; gap: .4rem; color: var(--green); font-weight: 600; cursor: pointer; list-style: none; min-height: 2.75rem; }
-  details.inline > summary::-webkit-details-marker { display: none; }
+  details.inline > summary { color: var(--green); font-weight: 600; cursor: pointer; }
+  details.inline > summary .sum { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.75rem; }
   details.inline > summary .chev { stroke: var(--green); width: .85rem; height: .85rem; }
   details.inline[open] > summary .chev { transform: rotate(180deg); }
 
@@ -186,8 +191,8 @@
 
   details.help { border-top: 1px solid var(--line-soft); padding: .6rem 0; }
   details.help:last-of-type { border-bottom: 1px solid var(--line-soft); }
-  details.help > summary { font-weight: 600; cursor: pointer; padding: .4rem 0; min-height: 2.75rem; display: flex; align-items: center; justify-content: space-between; list-style: none; }
-  details.help > summary::-webkit-details-marker { display: none; }
+  details.help > summary { font-weight: 600; cursor: pointer; padding: .4rem 0; }
+  details.help > summary .sum { display: flex; align-items: center; justify-content: space-between; min-height: 2.75rem; }
   details.help[open] > summary .chev { transform: rotate(180deg); }
   details h3 { font-size: 1rem; margin: 1rem 0 .3rem; }
   details ol { padding-left: 1.3rem; margin: .2rem 0; color: var(--text-soft); }
@@ -212,9 +217,9 @@
     <div class="rule" aria-hidden="true"></div>
 
     <details class="more" id="moreMenu">
-      <summary aria-label="More options">
+      <summary aria-label="More options"><span class="sum">
         <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-      </summary>
+      </span></summary>
       <div class="menu">
         <button type="button" id="btnClear" class="danger">Clear everything and start again</button>
       </div>
@@ -225,10 +230,10 @@
     <form id="form" novalidate autocomplete="on">
 
       <details class="stage" open>
-        <summary>
+        <summary><span class="sum">
           <h2 id="s1"><span class="n" aria-hidden="true">01</span>Your details</h2>
           <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
+        </span></summary>
 
         <label for="name">Full name</label>
         <input id="name" type="text" data-key="name" autocomplete="name">
@@ -311,7 +316,7 @@
         <span class="hint" id="hint_fixcaps">Tidies names and companies dictated in the wrong case, and makes web and email addresses lower-case.</span>
 
         <details class="inline">
-          <summary>More details: tagline and address <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <summary><span class="sum">More details: tagline and address <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
           <label for="tagline">Tagline</label>
           <input id="tagline" type="text" data-key="tagline" aria-describedby="hint_tagline">
           <span class="hint" id="hint_tagline">One short line, such as a motto or your podcast name.</span>
@@ -322,10 +327,10 @@
       </details>
 
       <details class="stage" open>
-        <summary>
+        <summary><span class="sum">
           <h2 id="s2"><span class="n" aria-hidden="true">02</span>The look</h2>
           <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
+        </span></summary>
 
         <fieldset>
           <legend>Signature layout</legend>
@@ -372,7 +377,7 @@
           <div class="swatches" id="colours"></div>
         </fieldset>
         <details class="inline">
-          <summary>Custom colour code <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <summary><span class="sum">Custom colour code <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
           <label for="customColour">Six-digit colour code</label>
           <input id="customColour" type="text" data-key="customColour" placeholder="#ff6600" aria-describedby="hint_custom err_custom">
           <span class="hint" id="hint_custom">Like #ff6600. Overrides the swatch above.</span>
@@ -390,10 +395,10 @@
       </details>
 
       <details class="stage">
-        <summary>
+        <summary><span class="sum">
           <h2 id="s3"><span class="n" aria-hidden="true">03</span>Branding and social links</h2>
           <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
-        </summary>
+        </span></summary>
         <p class="lead">Optional. A signature with no picture is the most reliable of all, so skipping this is a perfectly good choice.</p>
 
         <fieldset>
@@ -425,7 +430,7 @@
           <input id="imageUrl" type="url" data-key="imageUrl" aria-describedby="hint_imageurl">
           <span class="hint" id="hint_imageurl">A direct link to the picture itself, ending in .png or .jpg.</span>
           <details class="inline">
-            <summary>How to get a web address for a picture on your phone <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+            <summary><span class="sum">How to get a web address for a picture on your phone <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
             <ol>
               <li>In Safari, go to postimages.org. No account is needed.</li>
               <li>Tap Choose images, then pick your logo from Photos or Files.</li>
@@ -442,18 +447,25 @@
           <span class="hint" id="hint_alt">What a screen reader says, for example "Tech Doc Podcast logo".</span>
           <div class="row">
             <div><label for="imageSize">Image size</label>
-              <select id="imageSize" data-key="imageSize">
-                <option value="64">64 pixels (small)</option><option value="90" selected>90 pixels (medium)</option><option value="120">120 pixels (large)</option>
+              <select id="imageSize" data-key="imageSize" aria-describedby="hint_imagesize">
+                <option value="64">64 pixels (small)</option><option value="90" selected>90 pixels (medium)</option><option value="120">120 pixels (large)</option><option value="custom">Custom size</option>
               </select></div>
             <div><label for="imageShape">Shape</label>
               <select id="imageShape" data-key="imageShape">
                 <option value="square">Square</option><option value="round">Circle (good for a headshot)</option>
               </select></div>
           </div>
+          <div id="imageSizeCustomWrap" hidden>
+            <label for="imageSizeCustom">Custom size in pixels</label>
+            <input id="imageSizeCustom" type="number" inputmode="numeric" min="32" max="240" step="1" data-key="imageSizeCustom" placeholder="90" aria-describedby="hint_imagesizecustom err_imageSizeCustom">
+            <span class="hint" id="hint_imagesizecustom">Any whole number from 32 to 240. That is the width and height of the picture.</span>
+            <span class="err" id="err_imageSizeCustom" role="alert"></span>
+          </div>
+          <span class="hint" id="hint_imagesize">Most email apps show the picture at this size. Gmail and Outlook on the web may scale it slightly.</span>
         </div>
 
         <details class="inline">
-          <summary>Banner image <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <summary><span class="sum">Banner image <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
           <p class="hint" style="margin-top:.4rem">A wide picture attached to your signature, such as show artwork or a promo strip. Best on a main signature rather than one used for replies.</p>
           <fieldset>
             <legend>Where is your banner?</legend>
@@ -489,11 +501,24 @@
             <label for="bannerLink">Where tapping the banner goes</label>
             <input id="bannerLink" type="url" data-key="bannerLink" aria-describedby="hint_blink">
             <span class="hint" id="hint_blink">Leave blank to use your website.</span>
-            <label for="bannerPos">Position</label>
-            <select id="bannerPos" data-key="bannerPos">
-              <option value="below" selected>Below the signature</option>
-              <option value="above">Above the signature</option>
-            </select>
+            <div class="row">
+              <div><label for="bannerSize">Banner size</label>
+                <select id="bannerSize" data-key="bannerSize" aria-describedby="hint_bannersize">
+                  <option value="240">240 pixels wide (small)</option><option value="320" selected>320 pixels wide (medium)</option><option value="480">480 pixels wide (large)</option><option value="custom">Custom width</option>
+                </select></div>
+              <div><label for="bannerPos">Position</label>
+                <select id="bannerPos" data-key="bannerPos">
+                  <option value="below" selected>Below the signature</option>
+                  <option value="above">Above the signature</option>
+                </select></div>
+            </div>
+            <div id="bannerSizeCustomWrap" hidden>
+              <label for="bannerSizeCustom">Custom width in pixels</label>
+              <input id="bannerSizeCustom" type="number" inputmode="numeric" min="120" max="600" step="1" data-key="bannerSizeCustom" placeholder="320" aria-describedby="hint_bannersizecustom err_bannerSizeCustom">
+              <span class="hint" id="hint_bannersizecustom">Any whole number from 120 to 600. The height follows the picture's own proportions.</span>
+              <span class="err" id="err_bannerSizeCustom" role="alert"></span>
+            </div>
+            <span class="hint" id="hint_bannersize">On narrow phone screens the banner shrinks to fit, whatever size you pick.</span>
           </div>
         </details>
 
@@ -507,7 +532,7 @@
         </fieldset>
 
         <details class="inline">
-          <summary>Advanced: use your own icon images <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <summary><span class="sum">Advanced: use your own icon images <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
           <label for="iconBase">Icon folder web address</label>
           <input id="iconBase" type="url" data-key="iconBase" aria-describedby="hint_iconbase">
           <span class="hint" id="hint_iconbase">A public folder with facebook.png, instagram.png, linkedin.png, x.png, youtube.png, tiktok.png and website.png. Leave blank for the built-in set.</span>
@@ -518,7 +543,7 @@
         </details>
 
         <details class="inline">
-          <summary>Contact card (vCard) <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+          <summary><span class="sum">Contact card (vCard) <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
           <p class="hint" style="margin-top:.4rem">A contact card is a small file people can open to add you to their Contacts in one tap. It uses the same details as your signature, so there's nothing extra to type.</p>
           <label class="opt"><input type="checkbox" id="vcardOn" data-key="vcardOn"><span>Also make a contact card from these details</span></label>
           <div id="vcardOptions" hidden>
@@ -556,7 +581,7 @@
       <div class="status" role="status" aria-live="polite" id="status"></div>
 
       <details class="help">
-        <summary>How to add it to your email app <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <summary><span class="sum">How to add it to your email app <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
         <h3>Mail on iPhone and iPad</h3>
         <ol><li>Press Copy signature.</li><li>Go to Settings, Apps, Mail, Signature, and paste.</li><li>If the colours and layout disappear, shake the phone (or use the undo gesture) and choose Undo Change Attributes.</li></ol>
         <h3>Outlook (Windows or Mac)</h3>
@@ -569,7 +594,7 @@
         <p>Sign Off remembers what you type on this device so you can come back to it. If the device isn't yours, open the menu at the top right and choose "Clear everything and start again" when you're finished.</p>
       </details>
       <details class="help">
-        <summary>For the technically minded <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></summary>
+        <summary><span class="sum">For the technically minded <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></span></summary>
         <div class="actions">
           <button type="button" id="btnCopyHtml" class="btn-secondary btn-small">Copy HTML code</button>
           <button type="button" id="btnCopyText" class="btn-secondary btn-small">Copy plain text</button>
@@ -706,12 +731,24 @@
     if (s.bannerMode === 'link') return (s.bannerUrl || '').trim();
     return '';
   }
+  // Chosen sizes in pixels. A custom entry is clamped to the allowed range; an empty or unusable one falls back to the default.
+  const IMAGE_RANGE = [32, 240], BANNER_RANGE = [120, 600];
+  function pickSize(choice, custom, range, fallback) {
+    if (choice === 'custom') {
+      const n = parseInt(custom, 10);
+      return isNaN(n) ? fallback : Math.max(range[0], Math.min(range[1], n));
+    }
+    return parseInt(choice, 10) || fallback;
+  }
+  const imagePx = s => pickSize(s.imageSize, s.imageSizeCustom, IMAGE_RANGE, 90);
+  const bannerPx = s => pickSize(s.bannerSize, s.bannerSizeCustom, BANNER_RANGE, 320);
   function bannerHtml(s) {
     const src = bannerSrc(s);
     if (!src) return '';
     const href = normUrl((s.bannerLink || '').trim() || s.website);
-    const img = '<img src="' + esc(src) + '" width="320" alt="' + esc(s.bannerAlt || '') + '" style="display:block;border:0;width:100%;max-width:320px;height:auto;">';
-    return href ? '<a href="' + esc(href) + '" style="text-decoration:none;display:block;max-width:320px;">' + img + '</a>' : img;
+    const w = bannerPx(s);
+    const img = '<img src="' + esc(src) + '" width="' + w + '" alt="' + esc(s.bannerAlt || '') + '" style="display:block;border:0;width:100%;max-width:' + w + 'px;height:auto;">';
+    return href ? '<a href="' + esc(href) + '" style="text-decoration:none;display:block;max-width:' + w + 'px;">' + img + '</a>' : img;
   }
   function withBanner(s, core) {
     const b = bannerHtml(s);
@@ -734,7 +771,7 @@
     const link = 'color:' + col + ';text-decoration:none;';
     const socials = activeSocials(s);
     const src = imageSrc(s);
-    const size = parseInt(s.imageSize, 10) || 90;
+    const size = imagePx(s);
     const round = s.imageShape === 'round';
     const sep = ' <span style="color:#999999;">|</span> ';
     const table = '<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">';
@@ -793,7 +830,7 @@
       multi(s, 'email').forEach(x => parts.push(lab(x) + '<a href="mailto:' + esc(x.v) + '" style="' + link + '">' + esc(x.v) + '</a>'));
       if (s.website) parts.push('<a href="' + esc(normUrl(s.website)) + '" style="' + link + '">' + esc(prettyUrl(s.website)) + '</a>');
       let h = table;
-      if (src) h += '<tr><td style="padding-bottom:8px;">' + image(Math.min(size, 64)) + '</td></tr>';
+      if (src) h += '<tr><td style="padding-bottom:8px;">' + image(size) + '</td></tr>';
       h += '<tr><td style="' + base + '">' + line1 + '</td></tr>';
       if (parts.length) h += '<tr><td style="' + base + 'font-size:13px;">' + parts.join(sep) + '</td></tr>';
       if (s.tagline) h += '<tr><td style="' + base + 'font-size:13px;font-style:italic;color:' + grey + ';">' + esc(s.tagline) + '</td></tr>';
@@ -834,13 +871,14 @@
     const src = imageSrc(s);
     const imgWord = s.imageAlt || 'image';
     const round = s.imageShape === 'round';
+    const sizeWords = imagePx(s) + ' pixels ' + (round ? 'across, cropped to a circle' : 'square');
     const layouts = {
       classic: 'The Classic layout stacks everything in one column with a short ' + cName + ' rule under your name.',
       sidebar: 'The Sidebar layout puts ' + (src ? 'your ' + imgWord + ' on the left and ' : '') + 'a thin vertical ' + cName + ' line beside your details.',
       compact: 'The Compact layout keeps everything to two tight lines.'
     };
     const parts = [layouts[s.layout] || layouts.classic];
-    if (src && s.layout !== 'sidebar') parts.push('Your ' + imgWord + ' sits at the top' + (round ? ', cropped to a circle' : '') + '.');
+    if (src) parts.push('Your ' + imgWord + ' is ' + sizeWords + (s.layout === 'sidebar' ? '.' : ' and sits at the top.'));
     if (s.imageMode === 'embed' && !src) parts.push('You chose to use an image from your device but have not picked one yet.');
     if (s.imageMode === 'link' && !src) parts.push('You chose an image web address but the box is empty.');
     parts.push('Your name' + (s.name ? ', ' + s.name + ',' : '') + ' is in bold ' + cName + ' ' + fontName + '.');
@@ -854,7 +892,7 @@
     if (soc.length) parts.push('At the bottom, ' + soc.length + ' social link' + (soc.length > 1 ? 's' : '') + ' as ' + (s.socialStyle === 'icons' ? 'clickable icons' : 'text links') + ': ' + soc.map(x => x.label).join(', ') + '.');
     if (s.vcardOn && (s.vcardUrl || '').trim()) parts.push('A small "Add me to your contacts" link comes after the social links.');
     const bsrc = bannerSrc(s);
-    if (bsrc) parts.push((s.bannerPos === 'above' ? 'Above all of that' : 'Beneath everything') + ' is a full-width banner, ' + (s.bannerAlt ? 'described as "' + s.bannerAlt + '"' : 'with no description yet') + ', which links to ' + prettyUrl((s.bannerLink || '').trim() || s.website || '') + '.');
+    if (bsrc) parts.push((s.bannerPos === 'above' ? 'Above all of that' : 'Beneath everything') + ' is a banner ' + bannerPx(s) + ' pixels wide, ' + (s.bannerAlt ? 'described as "' + s.bannerAlt + '"' : 'with no description yet') + ', which links to ' + prettyUrl((s.bannerLink || '').trim() || s.website || '') + '.');
     else if (s.bannerMode !== 'none') parts.push('You turned on a banner but have not ' + (s.bannerMode === 'embed' ? 'picked one yet.' : 'entered its web address yet.'));
     if (!s.name) parts.push('You have not entered a name yet.');
     return parts.join(' ');
@@ -1012,13 +1050,15 @@
       if (/^email\d?$/.test(el.id) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) msg = 'Enter an email like name@example.com.';
       if (el.id === 'website' && !/\.[a-z]{2,}/i.test(v)) msg = 'Enter a web address like example.com.';
       if (el.id === 'customColour' && !/^#?[0-9a-f]{6}$/i.test(v)) msg = 'Use a six-digit code like #ff6600.';
+      if (el.id === 'imageSizeCustom' && !(/^\d+$/.test(v) && +v >= IMAGE_RANGE[0] && +v <= IMAGE_RANGE[1])) msg = 'Use a whole number from ' + IMAGE_RANGE[0] + ' to ' + IMAGE_RANGE[1] + '.';
+      if (el.id === 'bannerSizeCustom' && !(/^\d+$/.test(v) && +v >= BANNER_RANGE[0] && +v <= BANNER_RANGE[1])) msg = 'Use a whole number from ' + BANNER_RANGE[0] + ' to ' + BANNER_RANGE[1] + '.';
     }
     const errEl = $('err_' + el.id);
     if (errEl) errEl.textContent = msg;
     el.setAttribute('aria-invalid', msg ? 'true' : 'false');
     return !msg;
   }
-  ['email', 'email2', 'email3', 'website', 'customColour'].forEach(id => {
+  ['email', 'email2', 'email3', 'website', 'customColour', 'imageSizeCustom', 'bannerSizeCustom'].forEach(id => {
     $(id).addEventListener('blur', e => validate(e.target));
     $(id).addEventListener('input', e => { if (e.target.getAttribute('aria-invalid') === 'true') validate(e.target); });
   });
@@ -1041,6 +1081,8 @@
       $('add' + k.charAt(0).toUpperCase() + k.slice(1)).hidden = n >= 3;
       $(k + 'Group').classList.toggle('show-hint', n >= 2);
     });
+    $('imageSizeCustomWrap').hidden = s.imageSize !== 'custom';
+    $('bannerSizeCustomWrap').hidden = s.bannerSize !== 'custom';
     $('vcardOptions').hidden = !s.vcardOn;
     $('vcardActions').hidden = !s.vcardOn;
     $('bannerEmbedPanel').hidden = s.bannerMode !== 'embed';
@@ -1148,7 +1190,18 @@
   // Typing only saves; the preview and code rebuild when a field is finished (change) or a
   // radio/checkbox toggles. Rebuilding the preview on every keystroke made VoiceOver jump.
   form.addEventListener('input', e => { if (e.target.type === 'radio' || e.target.type === 'checkbox') return; save(); });
-  form.addEventListener('change', e => { normaliseCase(e.target); render(); });
+  form.addEventListener('change', e => {
+    normaliseCase(e.target); render();
+    const id = e.target.id, s = readState();
+    if (id === 'imageSize' || id === 'imageSizeCustom' || id === 'imageShape') {
+      if (id === 'imageSize' && s.imageSize === 'custom') { $('imageSizeCustom').focus(); say('Type the size you want, from ' + IMAGE_RANGE[0] + ' to ' + IMAGE_RANGE[1] + ' pixels.'); }
+      else say('Picture is now ' + imagePx(s) + ' pixels, ' + (s.imageShape === 'round' ? 'cropped to a circle.' : 'square.') + (imageSrc(s) ? '' : ' Add a picture to see it.'));
+    }
+    if (id === 'bannerSize' || id === 'bannerSizeCustom') {
+      if (id === 'bannerSize' && s.bannerSize === 'custom') { $('bannerSizeCustom').focus(); say('Type the width you want, from ' + BANNER_RANGE[0] + ' to ' + BANNER_RANGE[1] + ' pixels.'); }
+      else say('Banner is now ' + bannerPx(s) + ' pixels wide.' + (bannerSrc(s) ? '' : ' Add a banner to see it.'));
+    }
+  });
   $('btnCopyRich').addEventListener('click', copyRich);
   $('btnCopyHtml').addEventListener('click', () => copyText(htmlBox.value, 'HTML code'));
   $('btnCopyText').addEventListener('click', () => copyText(plainBox.value, 'Plain text signature'));
@@ -1157,7 +1210,7 @@
     if (!confirm('Clear all your details and start again?')) return;
     form.reset(); embeddedImage = ''; embeddedName = ''; bannerImage = ''; bannerName = '';
     showEmbedUI();
-    ['email', 'email2', 'email3', 'website', 'customColour'].forEach(id => { $(id).setAttribute('aria-invalid', 'false'); const er = $('err_' + id); if (er) er.textContent = ''; });
+    ['email', 'email2', 'email3', 'website', 'customColour', 'imageSizeCustom', 'bannerSizeCustom'].forEach(id => { $(id).setAttribute('aria-invalid', 'false'); const er = $('err_' + id); if (er) er.textContent = ''; });
     try { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_KEY + '-img'); localStorage.removeItem(STORAGE_KEY + '-banner'); } catch (e) {}
     $('moreMenu').removeAttribute('open'); render(); say('Everything cleared.'); $('name').focus();
   });
@@ -1175,6 +1228,12 @@
       $('bannerThumb').src = o.data; $('bannerThumbName').textContent = o.name;
       $('bannerThumbSize').textContent = (o.w && o.h ? o.w + ' by ' + o.h + ' pixels, about ' + o.kb : ''); }
   } catch (e) {}
+  // Toggle sections ourselves. Safari sometimes ignores an activation on a summary, notably a
+  // VoiceOver double tap, so handle the click and do the open/close here.
+  document.querySelectorAll('details > summary').forEach(sm => sm.addEventListener('click', e => {
+    e.preventDefault();
+    const d = sm.parentElement; d.open = !d.open;
+  }));
   showEmbedUI();
   flattenAll();
   render();
